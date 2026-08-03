@@ -14,6 +14,8 @@ class SecurityConfiguration {
         return http.authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/system/info", "/error")
                         .permitAll()
+                        .requestMatchers("/actuator/health/**", "/actuator/info", "/actuator/prometheus")
+                        .permitAll()
                         .anyRequest()
                         .authenticated())
                 .csrf(Customizer.withDefaults())
