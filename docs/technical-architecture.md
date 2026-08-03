@@ -6,26 +6,26 @@ Accepted initial architecture as of August 3, 2026. Dependency versions must rem
 
 ## Decision Summary
 
-| Area | Decision |
-| --- | --- |
-| Repository | Monorepo |
-| Backend architecture | Modular monolith |
-| Backend language | Java 25 LTS |
-| Backend framework | Spring Boot 4.1 |
-| Module boundaries | Spring Modulith using a compatible release managed through its BOM |
-| HTTP stack | Spring Web MVC |
-| API style | REST with OpenAPI |
-| Identity provider | Keycloak with one `smart-business` realm |
-| Security | Keycloak, Spring Security OIDC client, BFF pattern, secure server-side sessions |
-| Persistence | PostgreSQL 18 |
-| Flexible vertical data | PostgreSQL `jsonb` used selectively |
-| Database migrations | Flyway |
-| Binary media | Private S3-compatible object storage |
-| Customer and professional frontend | One role-aware React PWA |
-| Business administration frontend | Separate React web application |
-| Frontend language and tooling | TypeScript, React, and Vite |
-| Local infrastructure | Docker Compose |
-| CI/CD | GitHub Actions |
+| Area                               | Decision                                                                        |
+| ---------------------------------- | ------------------------------------------------------------------------------- |
+| Repository                         | Monorepo                                                                        |
+| Backend architecture               | Modular monolith                                                                |
+| Backend language                   | Java 25 LTS                                                                     |
+| Backend framework                  | Spring Boot 4.1                                                                 |
+| Module boundaries                  | Spring Modulith using a compatible release managed through its BOM              |
+| HTTP stack                         | Spring Web MVC                                                                  |
+| API style                          | REST with OpenAPI                                                               |
+| Identity provider                  | Keycloak with one `smart-business` realm                                        |
+| Security                           | Keycloak, Spring Security OIDC client, BFF pattern, secure server-side sessions |
+| Persistence                        | PostgreSQL 18                                                                   |
+| Flexible vertical data             | PostgreSQL `jsonb` used selectively                                             |
+| Database migrations                | Flyway                                                                          |
+| Binary media                       | Private S3-compatible object storage                                            |
+| Customer and professional frontend | One role-aware React PWA                                                        |
+| Business administration frontend   | Separate React web application                                                  |
+| Frontend language and tooling      | TypeScript, React, and Vite                                                     |
+| Local infrastructure               | Docker Compose                                                                  |
+| CI/CD                              | GitHub Actions                                                                  |
 
 ## Context
 

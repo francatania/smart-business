@@ -4,18 +4,18 @@
 
 Core model names must not depend on the barbershop vertical.
 
-| Core concept | Barbershop label | Nail salon label |
-| --- | --- | --- |
-| Organization | Barbershop | Nail salon |
-| Location | Branch | Branch |
-| Professional | Barber | Nail technician |
-| Customer | Customer | Customer |
-| Service | Haircut, beard trim | Manicure, nail art |
-| Appointment | Appointment | Appointment |
-| Customer record | Customer profile | Customer profile |
-| Service record | Haircut record | Session record |
-| Technique | Fade, scissors | Kapping, extensions |
-| Product | Styling product | Polish, gel |
+| Core concept    | Barbershop label    | Nail salon label    |
+| --------------- | ------------------- | ------------------- |
+| Organization    | Barbershop          | Nail salon          |
+| Location        | Branch              | Branch              |
+| Professional    | Barber              | Nail technician     |
+| Customer        | Customer            | Customer            |
+| Service         | Haircut, beard trim | Manicure, nail art  |
+| Appointment     | Appointment         | Appointment         |
+| Customer record | Customer profile    | Customer profile    |
+| Service record  | Haircut record      | Session record      |
+| Technique       | Fade, scissors      | Kapping, extensions |
+| Product         | Styling product     | Polish, gel         |
 
 Vertical-specific fields can extend the generic service record without changing its core identity.
 
@@ -144,18 +144,18 @@ Marketing permission must not be inferred from permission to store a photo or pr
 
 ## Initial Role Capabilities
 
-| Capability | Owner | Administrator | Receptionist | Professional | Customer |
-| --- | --- | --- | --- | --- | --- |
-| Manage organization settings | Yes | Configurable | No | No | No |
-| Manage staff and roles | Yes | Configurable | No | No | No |
-| Manage services and availability | Yes | Yes | Configurable | Own availability only | No |
-| Manage appointments | Yes | Yes | Yes | Assigned appointments | Own appointments |
-| View customer records | Yes | Yes | Configurable | Authorized service context | Shared content only |
-| Create service records | Yes | Yes | No by default | Yes | No |
-| Capture service photos | Yes | Yes | No by default | Yes | Customer upload only |
-| Run AI-assisted previews | Configurable | Configurable | Configurable | Yes | When enabled |
-| View internal notes | Yes | Yes | No by default | Authorized records | No |
-| View metrics | Yes | Yes | Configurable | Own metrics if enabled | No |
+| Capability                       | Owner        | Administrator | Receptionist  | Professional               | Customer             |
+| -------------------------------- | ------------ | ------------- | ------------- | -------------------------- | -------------------- |
+| Manage organization settings     | Yes          | Configurable  | No            | No                         | No                   |
+| Manage staff and roles           | Yes          | Configurable  | No            | No                         | No                   |
+| Manage services and availability | Yes          | Yes           | Configurable  | Own availability only      | No                   |
+| Manage appointments              | Yes          | Yes           | Yes           | Assigned appointments      | Own appointments     |
+| View customer records            | Yes          | Yes           | Configurable  | Authorized service context | Shared content only  |
+| Create service records           | Yes          | Yes           | No by default | Yes                        | No                   |
+| Capture service photos           | Yes          | Yes           | No by default | Yes                        | Customer upload only |
+| Run AI-assisted previews         | Configurable | Configurable  | Configurable  | Yes                        | When enabled         |
+| View internal notes              | Yes          | Yes           | No by default | Authorized records         | No                   |
+| View metrics                     | Yes          | Yes           | Configurable  | Own metrics if enabled     | No                   |
 
 Exact permissions should be policy-driven rather than permanently hard-coded to role names.
 
