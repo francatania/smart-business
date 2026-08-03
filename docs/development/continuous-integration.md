@@ -35,3 +35,5 @@ Dependabot proposes Maven, pnpm, GitHub Actions, and Docker updates each Monday.
 ## Local parity
 
 `make verify` runs backend and frontend verification, configuration and secret checks, Compose validation, API drift checks, Chromium smoke tests, and the same vulnerability scanners. It expects Docker to be available and leaves the local application stack running for troubleshooting. Use `make infra-down` when finished; it preserves named data volumes.
+
+`make verify-clean-checkout` archives tracked files into a validated temporary directory, runs both toolchains with their pinned containers, verifies Compose, and builds all application images without using local build output. It never starts or removes the persistent infrastructure volumes.
