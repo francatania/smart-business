@@ -14,7 +14,7 @@
     "api:contract": "node openapi/export-contract.mjs",
     "api:generate": "pnpm api:contract && pnpm api:client",
     "build": "pnpm -r --if-present build",
-    "e2e": "pnpm --filter @smart-business/e2e test",
+    "e2e": "pnpm --filter @smart-business/e2e e2e",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "pnpm -r --if-present lint",

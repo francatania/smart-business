@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help setup infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev api-generate format test verify compose-up secrets-check configuration-check
+.PHONY: help setup infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev api-generate format test test-fast test-integration e2e verify compose-up secrets-check configuration-check
 
 help:
 	@echo "Smart Business development commands"
@@ -16,6 +16,9 @@ help:
 	@echo "  make secrets-check  Scan for representative committed-secret patterns"
 	@echo "  make format         Format supported repository files"
 	@echo "  make test           Run backend and frontend tests"
+	@echo "  make test-fast      Run tests that require no external service"
+	@echo "  make test-integration Run PostgreSQL integration tests"
+	@echo "  make e2e            Run Playwright against the containerized applications"
 	@echo "  make verify         Run the local CI-equivalent verification"
 	@echo "  make infra-reset    Delete named local development volumes (confirmation required)"
 
@@ -66,6 +69,16 @@ format:
 test:
 	cd backend && ./mvnw test
 	pnpm test
+
+test-fast:
+	cd backend && ./mvnw test -Dgroups='!integration'
+	pnpm test
+
+test-integration:
+	cd backend && ./mvnw test -Dgroups=integration
+
+e2e:
+	pnpm e2e
 
 verify:
 	cd backend && ./mvnw verify
