@@ -1,0 +1,242 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: 'true'
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+      - name: Verify backend
+        working-directory: backend
+        run: ./mvnw --batch-mode --no-transfer-progress verify
+      - name: Upload backend test reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: backend-test-reports
+          path: backend/target/surefire-reports
+          if-no-files-found: ignore
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: 10.34.0
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Verify frontend workspace
+        run: pnpm verify
+      - name: Verify public frontend configuration
+        run: ./scripts/verify-public-frontend-config.sh
+      - name: Upload frontend test reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: frontend-test-reports
+          path: frontend/apps/*/test-results
+          if-no-files-found: ignore
+
+  api-contract:
+    name: API contract
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:18.4-bookworm
+        env:
+          POSTGRES_DB: smart_business
+          POSTGRES_USER: smart_business_app
+          POSTGRES_PASSWORD: ci-smart-business-database
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready --username=smart_business_app --dbname=smart_business"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: 10.34.0
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build backend contract source
+        working-directory: backend
+        run: ./mvnw --batch-mode --no-transfer-progress -DskipTests package
+      - name: Verify generated API artifacts
+        env:
+          SPRING_PROFILES_ACTIVE: test
+          DATABASE_URL: jdbc:postgresql://localhost:5432/smart_business?currentSchema=smart_business
+          DATABASE_USERNAME: smart_business_app
+          DATABASE_PASSWORD: ci-smart-business-database
+        run: |
+          java -jar backend/target/backend-*.jar > backend-contract.log 2>&1 &
+          backend_pid=$!
+          trap 'kill "$backend_pid"' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8082/actuator/health/readiness >/dev/null; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              cat backend-contract.log
+              exit 1
+            fi
+            sleep 2
+          done
+          pnpm api:generate
+          git diff --exit-code -- openapi/smart-business.json frontend/packages/api-client/src/generated
+      - name: Upload backend startup log
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: api-contract-backend-log
+          path: backend-contract.log
+          if-no-files-found: ignore
+
+  end-to-end:
+    name: End-to-end
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: 10.34.0
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Chromium
+        run: pnpm --filter @smart-business/e2e exec playwright install --with-deps chromium
+      - name: Start containerized applications
+        run: docker compose --env-file infra/.env.example -f infra/compose.yaml --profile applications up -d --build --wait
+      - name: Run browser smoke tests
+        run: pnpm e2e
+      - name: Capture application logs
+        if: failure()
+        run: docker compose --env-file infra/.env.example -f infra/compose.yaml logs --no-color > compose-e2e.log
+      - name: Upload Playwright artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-report
+          path: |
+            frontend/e2e/playwright-report
+            frontend/e2e/test-results
+            compose-e2e.log
+          if-no-files-found: ignore
+      - name: Stop containerized applications
+        if: always()
+        run: docker compose --env-file infra/.env.example -f infra/compose.yaml --profile applications down --volumes
+
+  security:
+    name: Security
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Set up Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+      - name: Verify secret scanner and current tree
+        run: make secrets-check
+      - name: Scan Git history for secrets
+        run: docker run --rm --volume "$PWD:/repo" zricethezav/gitleaks:v8.30.1 detect --source=/repo --no-banner --redact
+      - name: Validate dependency exception policy
+        run: node scripts/verify-security-exceptions.mjs
+      - name: Build backend runtime artifact
+        working-directory: backend
+        run: ./mvnw --batch-mode --no-transfer-progress -DskipTests package
+      - name: Scan backend runtime dependencies
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.73.0
+          scan-type: rootfs
+          scan-ref: backend/target/backend-0.1.0-SNAPSHOT.jar
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: false
+          exit-code: '1'
+          trivyignores: .trivyignore
+      - name: Scan frontend dependencies
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.73.0
+          scan-type: fs
+          scan-ref: pnpm-lock.yaml
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: false
+          exit-code: '1'
+          trivyignores: .trivyignore
+      - name: Review dependency changes
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+
+  compose:
+    name: Compose configuration
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Validate Docker Compose configuration
+        run: docker compose --env-file infra/.env.example -f infra/compose.yaml --profile applications config --quiet

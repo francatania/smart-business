@@ -1,0 +1,12 @@
+{
+  "exceptions": [
+    {
+      "id": "GHSA-qwww-vcr4-c8h2",
+      "package": "react-router",
+      "reason": "The advisory affects React Server Components action handling. The portal and administration applications are client-only Vite SPAs and expose no RSC server actions; npm does not yet publish the scanner's fixed version.",
+      "owner": "platform-team",
+      "expires": "2026-09-15",
+      "trackingIssue": "https://github.com/francatania/smart-business/issues/26"
+    }
+  ]
+}

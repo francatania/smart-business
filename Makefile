@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help setup infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev api-generate format test test-fast test-integration e2e verify compose-up secrets-check configuration-check
+.PHONY: help setup infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev api-generate format test test-fast test-integration e2e verify compose-up secrets-check configuration-check security-check
 
 help:
 	@echo "Smart Business development commands"
@@ -14,6 +14,7 @@ help:
 	@echo "  make compose-up     Start infrastructure and optional application containers"
 	@echo "  make api-generate   Regenerate the OpenAPI TypeScript client"
 	@echo "  make secrets-check  Scan for representative committed-secret patterns"
+	@echo "  make security-check Run Git-history and dependency vulnerability scans"
 	@echo "  make format         Format supported repository files"
 	@echo "  make test           Run backend and frontend tests"
 	@echo "  make test-fast      Run tests that require no external service"
@@ -62,6 +63,13 @@ secrets-check:
 configuration-check:
 	./scripts/verify-public-frontend-config.sh
 
+security-check: secrets-check
+	node scripts/verify-security-exceptions.mjs
+	docker run --rm --volume "$(CURDIR):/repo" zricethezav/gitleaks:v8.30.1 detect --source=/repo --no-banner --redact
+	cd backend && ./mvnw --batch-mode --no-transfer-progress -DskipTests package
+	docker run --rm --volume smart-business-trivy-cache:/root/.cache/trivy --volume "$(CURDIR):/repo" aquasec/trivy:0.73.0 --quiet rootfs --offline-scan --ignorefile /repo/.trivyignore --scanners vuln --severity HIGH,CRITICAL --exit-code 1 /repo/backend/target/backend-0.1.0-SNAPSHOT.jar
+	docker run --rm --volume smart-business-trivy-cache:/root/.cache/trivy --volume "$(CURDIR):/repo" aquasec/trivy:0.73.0 --quiet fs --offline-scan --ignorefile /repo/.trivyignore --scanners vuln --severity HIGH,CRITICAL --exit-code 1 /repo/pnpm-lock.yaml
+
 format:
 	cd backend && ./mvnw spotless:apply
 	pnpm format
@@ -86,3 +94,7 @@ verify:
 	$(MAKE) secrets-check
 	$(MAKE) configuration-check
 	docker compose --env-file infra/.env.example -f infra/compose.yaml config --quiet
+	docker compose --env-file infra/.env.example -f infra/compose.yaml --profile applications up -d --build --wait
+	pnpm api:check
+	pnpm e2e
+	$(MAKE) security-check
