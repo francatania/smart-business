@@ -1,3 +1,4 @@
 # UI package
 
-This package contains accessible shared components and design tokens. Application layouts remain application-owned.
+Shared accessible React components and neutral design tokens. Applications may
+override the CSS variables to apply business branding without forking components.

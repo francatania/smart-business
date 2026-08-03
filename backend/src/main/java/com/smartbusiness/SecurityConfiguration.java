@@ -12,7 +12,7 @@ class SecurityConfiguration {
     @Bean
     SecurityFilterChain applicationSecurity(HttpSecurity http) throws Exception {
         return http.authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/system/info", "/error")
+                        .requestMatchers("/api/system/info", "/v3/api-docs/**", "/error")
                         .permitAll()
                         .requestMatchers("/actuator/health/**", "/actuator/info", "/actuator/prometheus")
                         .permitAll()

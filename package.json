@@ -9,7 +9,10 @@
     "pnpm": "10.34.0"
   },
   "scripts": {
-    "api:generate": "pnpm --filter @smart-business/api-client generate",
+    "api:check": "pnpm api:generate && git diff --exit-code -- openapi/smart-business.json frontend/packages/api-client/src/generated",
+    "api:client": "pnpm --filter @smart-business/api-client generate",
+    "api:contract": "node openapi/export-contract.mjs",
+    "api:generate": "pnpm api:contract && pnpm api:client",
     "build": "pnpm -r --if-present build",
     "e2e": "pnpm --filter @smart-business/e2e test",
     "format": "prettier --write .",
@@ -20,6 +23,11 @@
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "devDependencies": {
-    "prettier": "3.6.2"
+    "@eslint/js": "9.39.2",
+    "@types/node": "24.13.3",
+    "eslint": "9.39.2",
+    "prettier": "3.6.2",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.65.0"
   }
 }
