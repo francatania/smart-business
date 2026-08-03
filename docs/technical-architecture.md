@@ -407,7 +407,7 @@ Compose requirements:
 - A documented reset process that names the exact local volumes affected.
 - Optional services enabled through profiles rather than required by every developer.
 
-The specific local S3-compatible implementation remains to be selected during scaffolding.
+Garage 2.3 is the selected S3-compatible implementation for local development. It runs as a single node with a local-only bucket and credentials. Application code must depend on the S3 protocol and configuration rather than Garage-specific APIs so production can use another compatible provider.
 
 Keycloak uses a database and credentials separate from the application database. Local development may use one PostgreSQL server with two logical databases and two users:
 
@@ -535,10 +535,11 @@ Kubernetes is not part of the initial architecture. A simpler container platform
 - [React with TypeScript](https://react.dev/learn/typescript)
 - [Vite guide](https://vite.dev/guide/)
 - [Docker Compose documentation](https://docs.docker.com/compose/)
+- [Garage documentation](https://garagehq.deuxfleurs.fr/documentation/)
 
 ## Open Questions
 
-- Which S3-compatible implementation to use locally and which provider to use in production.
+- Which S3-compatible provider to use in production.
 - Which UI component and styling system to use across the frontend workspace.
 - Whether deployment hostnames use separate subdomains or path-based routing.
 - Which email provider to use for magic links and notifications.

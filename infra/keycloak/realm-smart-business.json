@@ -1,0 +1,50 @@
+{
+  "realm": "smart-business",
+  "enabled": true,
+  "displayName": "Smart Business",
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "platform_admin",
+        "description": "Platform-wide administration. Organization roles remain in PostgreSQL."
+      },
+      {
+        "name": "support_agent",
+        "description": "Reserved platform support role."
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "portal-bff",
+      "name": "Customer and Professional Portal BFF",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${PORTAL_BFF_CLIENT_SECRET}",
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:5173/*", "http://localhost:3000/*"],
+      "webOrigins": ["http://localhost:5173", "http://localhost:3000"]
+    },
+    {
+      "clientId": "admin-bff",
+      "name": "Business Administration BFF",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${ADMIN_BFF_CLIENT_SECRET}",
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:5174/*", "http://localhost:3001/*"],
+      "webOrigins": ["http://localhost:5174", "http://localhost:3001"]
+    }
+  ]
+}
