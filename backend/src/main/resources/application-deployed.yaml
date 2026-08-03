@@ -1,0 +1,16 @@
+smart-business:
+  environment: ${SMART_BUSINESS_ENVIRONMENT}
+  public-base-url: ${SMART_BUSINESS_PUBLIC_BASE_URL}
+
+spring:
+  config:
+    activate:
+      on-profile: deployed
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+
+springdoc:
+  api-docs:
+    enabled: false
