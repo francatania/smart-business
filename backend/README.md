@@ -23,3 +23,10 @@ docker compose --env-file infra/.env.example -f infra/compose.yaml \
 ```
 
 The local credentials in `infra/.env.example` are development-only defaults.
+
+## Module boundaries
+
+The modular monolith uses closed Spring Modulith modules. Cross-module calls may
+only target packages explicitly annotated as the module's `api` named interface.
+Run `./mvnw test` to verify the production graph and the negative enforcement
+fixtures.
