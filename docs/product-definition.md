@@ -61,7 +61,7 @@ The customer can:
 
 ### Professional PWA
 
-A mobile-first experience for professionals working for an organization. It may be delivered by the same PWA as the customer experience, with navigation and capabilities determined by role.
+A mobile-first experience for professionals working for an organization. It is delivered by the same PWA as the customer experience, with navigation and capabilities determined by role and organization membership.
 
 The professional can:
 
@@ -165,10 +165,10 @@ Revenue and average ticket metrics should only be considered reliable once the s
 5. The professional can capture photos, update service records, and use AI previews from the PWA.
 6. The AI module is planned after the booking and service-record foundations.
 7. The first booking creates or finds a platform user and creates an organization-specific customer relationship.
+8. Customers and professionals use one role-aware PWA; business administration remains a separate web application.
 
 ## Open Questions
 
-- Whether the customer and professional experiences will be one deployed PWA or two separately deployed PWAs.
 - Whether a business can customize vertical terminology or only choose from supported vertical templates.
 - Which metrics are included in the initial subscription tier.
 - Whether AI usage is included in a subscription, limited by quota, or billed separately.
