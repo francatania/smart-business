@@ -12,9 +12,9 @@ cleanup() {
       return 1
       ;;
   esac
-  docker --context default run --rm --volume "$checkout_directory:/clean-checkout" \
-    alpine:3.23.3 chmod -R a+rwX /clean-checkout >/dev/null 2>&1 || true
-  rm -rf "$checkout_directory"
+  checkout_name="${checkout_directory##*/}"
+  docker --context default run --rm --volume /tmp:/host-tmp \
+    alpine:3.23.3 rm -rf "/host-tmp/$checkout_name" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
 
