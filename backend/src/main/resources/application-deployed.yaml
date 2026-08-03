@@ -3,6 +3,11 @@ smart-business:
   public-base-url: ${SMART_BUSINESS_PUBLIC_BASE_URL}
 
 spring:
+  main:
+    banner-mode: off
+  output:
+    ansi:
+      enabled: never
   config:
     activate:
       on-profile: deployed
@@ -14,3 +19,8 @@ spring:
 springdoc:
   api-docs:
     enabled: false
+
+logging:
+  structured:
+    format:
+      console: logstash

@@ -2,6 +2,7 @@ package com.smartbusiness;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +44,9 @@ class DatabaseMigrationTests {
     @Autowired
     private Environment environment;
 
+    @Autowired
+    private MeterRegistry meterRegistry;
+
     @Test
     void migratesAndValidatesTheSchemaRepeatedly() {
         flyway.validate();
@@ -59,5 +63,8 @@ class DatabaseMigrationTests {
         assertThat(environment.getProperty("spring.jpa.hibernate.ddl-auto")).isEqualTo("validate");
         assertThat(environment.getProperty("spring.session.jdbc.initialize-schema"))
                 .isEqualTo("never");
+        assertThat(meterRegistry.find("jvm.memory.used").meter()).isNotNull();
+        assertThat(meterRegistry.find("jdbc.connections.max").meter()).isNotNull();
+        assertThat(meterRegistry.find("hikaricp.connections").meter()).isNotNull();
     }
 }
