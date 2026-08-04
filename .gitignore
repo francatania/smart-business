@@ -1,0 +1,36 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!**/.env.example
+*.local
+
+# Java
+backend/target/
+*.class
+
+# JavaScript
+node_modules/
+.pnpm-store/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Test artifacts
+playwright-report/
+test-results/
+
+# IDE and operating system
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+.tmp/
+tmp/
+
+# Local infrastructure data
+infra/data/
