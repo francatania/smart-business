@@ -30,3 +30,10 @@ The modular monolith uses closed Spring Modulith modules. Cross-module calls may
 only target packages explicitly annotated as the module's `api` named interface.
 Run `./mvnw test` to verify the production graph and the negative enforcement
 fixtures.
+
+## Database migrations
+
+Flyway is the only schema owner. Migrations live in
+`src/main/resources/db/migration`, Hibernate runs with `ddl-auto=validate`, and
+Spring Session's built-in schema initializer is disabled. Integration tests use
+PostgreSQL 18.4 through Testcontainers; H2 is intentionally not supported.
