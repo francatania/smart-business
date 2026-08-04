@@ -1,4 +1,4 @@
-FROM node:24.18.1-bookworm AS build
+FROM node:26.5.1-bookworm AS build
 WORKDIR /workspace
 RUN corepack enable && corepack prepare pnpm@10.34.0 --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
