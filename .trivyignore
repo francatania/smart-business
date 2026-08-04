@@ -1,0 +1,2 @@
+# Every ignored advisory must have a matching, unexpired entry in security/dependency-exceptions.json.
+GHSA-qwww-vcr4-c8h2
