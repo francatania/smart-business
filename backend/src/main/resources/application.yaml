@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: smart-business
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/smart_business}
+    username: ${DATABASE_USERNAME:smart_business}
+    password: ${DATABASE_PASSWORD:smart-business-local-password}
+  flyway:
+    create-schemas: true
+    default-schema: smart_business
+    schemas: smart_business
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        default_schema: smart_business
+        jdbc:
+          time_zone: UTC
+  mvc:
+    problemdetails:
+      enabled: true
+  session:
+    jdbc:
+      initialize-schema: never
+
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+
+management:
+  server:
+    port: ${MANAGEMENT_SERVER_PORT:8082}
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+info:
+  application:
+    name: ${spring.application.name}
+    version: '@project.version@'

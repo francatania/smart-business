@@ -1,3 +1,25 @@
 # Backend
 
-This directory contains the Java 25 and Spring Boot modular monolith. See `docs/technical-architecture.md` for the accepted architecture.
+This directory contains the Java 25 and Spring Boot modular monolith. See
+`docs/technical-architecture.md` for the accepted architecture.
+
+## Run on the host
+
+Start the infrastructure first, then run the application:
+
+```bash
+make infra-up
+make backend-run
+```
+
+The public application listens on `http://localhost:8080`. Health and metrics are
+isolated on the management listener at `http://localhost:8082`.
+
+## Run as a container
+
+```bash
+docker compose --env-file infra/.env.example -f infra/compose.yaml \
+  --profile backend up -d --build backend
+```
+
+The local credentials in `infra/.env.example` are development-only defaults.

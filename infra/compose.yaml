@@ -1,6 +1,38 @@
 name: smart-business
 
 services:
+  backend:
+    profiles: ['backend', 'applications']
+    build:
+      context: ../backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/${APP_DATABASE}
+      DATABASE_USERNAME: ${APP_DATABASE_USER}
+      DATABASE_PASSWORD: ${APP_DATABASE_PASSWORD}
+      SERVER_PORT: '8080'
+      MANAGEMENT_SERVER_PORT: '8082'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '127.0.0.1:${BACKEND_PORT}:8080'
+      - '127.0.0.1:${BACKEND_MANAGEMENT_PORT}:8082'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'bash',
+          '-c',
+          "exec 3<>/dev/tcp/127.0.0.1/8082; printf 'GET /actuator/health/readiness HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3; grep -q '200 OK' <&3",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+    networks:
+      - platform
+
   postgres:
     image: postgres:18.4-bookworm
     restart: unless-stopped
