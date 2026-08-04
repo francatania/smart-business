@@ -10,6 +10,7 @@ The product is initially focused on barbershops, but its domain model and core t
 - [Domain and Data Ownership](./domain-and-data.md): generic domain language, tenant boundaries, record visibility, and access rules.
 - [User Flows](./user-flows.md): customer booking, customer access, professional service records, AI-assisted previews, and business administration.
 - [Authentication and Access](./authentication-and-access.md): Keycloak, account creation, identity providers, passkeys, BFF sessions, roles, and account linking.
+- [ADR 0001: Identity, Session, and Recovery Policy](./decisions/0001-identity-session-and-recovery-policy.md): accepted authentication methods, session lifetimes, staff reauthentication, recovery boundaries, redirects, and Keycloak promotion policy.
 - [Technical Architecture](./technical-architecture.md): selected stack, modular monolith boundaries, persistence, media storage, frontend structure, local infrastructure, and scaling strategy.
 - [Configuration and Secret Handling](./development/configuration.md): profiles, environment variables, public frontend configuration, local overrides, and credential rotation.
 - [Observability and Audit Conventions](./development/observability.md): correlation, structured logs, management endpoints, operational metrics, and future audit-event rules.
