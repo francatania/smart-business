@@ -12,6 +12,7 @@ The product is initially focused on barbershops, but its domain model and core t
 - [Authentication and Access](./authentication-and-access.md): Keycloak, account creation, identity providers, passkeys, BFF sessions, roles, and account linking.
 - [Technical Architecture](./technical-architecture.md): selected stack, modular monolith boundaries, persistence, media storage, frontend structure, local infrastructure, and scaling strategy.
 - [Configuration and Secret Handling](./development/configuration.md): profiles, environment variables, public frontend configuration, local overrides, and credential rotation.
+- [Observability and Audit Conventions](./development/observability.md): correlation, structured logs, management endpoints, operational metrics, and future audit-event rules.
 
 ## Presentations
 
