@@ -13,6 +13,7 @@ The product is initially focused on barbershops, but its domain model and core t
 - [Technical Architecture](./technical-architecture.md): selected stack, modular monolith boundaries, persistence, media storage, frontend structure, local infrastructure, and scaling strategy.
 - [Configuration and Secret Handling](./development/configuration.md): profiles, environment variables, public frontend configuration, local overrides, and credential rotation.
 - [Observability and Audit Conventions](./development/observability.md): correlation, structured logs, management endpoints, operational metrics, and future audit-event rules.
+- [Automated Testing](./development/testing.md): backend test layers, PostgreSQL integration tests, frontend component tests, browser smoke tests, and fixture conventions.
 
 ## Presentations
 
