@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help setup infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev api-generate format test test-fast test-integration e2e verify verify-clean-checkout compose-up secrets-check configuration-check security-check
+.PHONY: help setup infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev api-generate format test test-fast test-integration e2e verify verify-clean-checkout compose-up secrets-check configuration-check security-check keycloak-config-check keycloak-reconcile keycloak-integration-test
 
 help:
 	@echo "Smart Business development commands"
@@ -14,6 +14,9 @@ help:
 	@echo "  make compose-up     Start infrastructure and optional application containers"
 	@echo "  make api-generate   Regenerate the OpenAPI TypeScript client"
 	@echo "  make secrets-check  Scan for representative committed-secret patterns"
+	@echo "  make keycloak-config-check Validate canonical and environment Keycloak settings"
+	@echo "  make keycloak-reconcile Reapply local Keycloak realm and BFF client settings"
+	@echo "  make keycloak-integration-test Test reconciliation against isolated Keycloak"
 	@echo "  make security-check Run Git-history and dependency vulnerability scans"
 	@echo "  make format         Format supported repository files"
 	@echo "  make test           Run backend and frontend tests"
@@ -64,6 +67,17 @@ secrets-check:
 configuration-check:
 	./scripts/verify-public-frontend-config.sh
 
+keycloak-config-check:
+	node scripts/validate-keycloak-config.mjs
+	node scripts/test-keycloak-config-validator.mjs
+	docker compose --env-file infra/.env.example -f infra/compose.yaml --profile identity-test config --quiet
+
+keycloak-reconcile: keycloak-config-check
+	docker compose --env-file infra/.env.example -f infra/compose.yaml run --rm keycloak-config
+
+keycloak-integration-test: keycloak-config-check
+	./scripts/test-keycloak-reconciliation.sh
+
 security-check: secrets-check
 	node scripts/verify-security-exceptions.mjs
 	docker run --rm --volume "$(CURDIR):/repo" zricethezav/gitleaks:v8.30.1 detect --source=/repo --no-banner --redact
@@ -94,6 +108,7 @@ verify:
 	pnpm verify
 	$(MAKE) secrets-check
 	$(MAKE) configuration-check
+	$(MAKE) keycloak-integration-test
 	docker compose --env-file infra/.env.example -f infra/compose.yaml config --quiet
 	docker compose --env-file infra/.env.example -f infra/compose.yaml --profile applications up -d --build --wait
 	pnpm api:check

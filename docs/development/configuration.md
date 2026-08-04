@@ -29,7 +29,44 @@ The `deployed` profile intentionally has no confidential defaults. Missing requi
 | `SERVER_PORT`                    | No                     | Platform | Application HTTP port; defaults to `8080`                      |
 | `MANAGEMENT_SERVER_PORT`         | No                     | Platform | Private management port; defaults to `8082`                    |
 
-Keycloak client secrets and Garage credentials in `infra/.env.example` are development-only foundations. They are not consumed by the application until the identity and media epics. Shared environments must inject them from a secret manager and rotate them independently.
+Garage credentials in `infra/.env.example` are development-only foundations. Shared environments must inject them from a secret manager and rotate them independently.
+
+## Keycloak variables and profiles
+
+Keycloak configuration uses an independent `local`, `test`, or `deployed`
+profile. The version-controlled reconciler consumes these variables:
+
+| Variable                         | Secret | Description                                     |
+| -------------------------------- | ------ | ----------------------------------------------- |
+| `KEYCLOAK_CONFIGURATION_PROFILE` | No     | Safety boundary: `local`, `test`, or `deployed` |
+| `KEYCLOAK_PUBLIC_URL`            | No     | Exact public issuer origin                      |
+| `KEYCLOAK_ADMIN_USER`            | No     | Administrative reconciliation username          |
+| `KEYCLOAK_ADMIN_PASSWORD`        | Yes    | Administrative reconciliation credential        |
+| `PORTAL_BFF_CLIENT_SECRET`       | Yes    | Confidential Portal OIDC client credential      |
+| `PORTAL_BFF_ORIGIN`              | No     | Exact Portal application origin                 |
+| `PORTAL_BFF_CALLBACK_URI`        | No     | Exact Portal backend callback through `/api`    |
+| `PORTAL_BFF_POST_LOGOUT_URI`     | No     | Configured Portal logout destination            |
+| `ADMIN_BFF_CLIENT_SECRET`        | Yes    | Confidential Admin OIDC client credential       |
+| `ADMIN_BFF_ORIGIN`               | No     | Exact Admin application origin                  |
+| `ADMIN_BFF_CALLBACK_URI`         | No     | Exact Admin backend callback through `/api`     |
+| `ADMIN_BFF_POST_LOGOUT_URI`      | No     | Configured Admin logout destination             |
+
+Local values live in `infra/.env.example`. Automated identity tests load
+`infra/keycloak/environments/test.env.example` after that base file. Only the test
+overlay defines `KEYCLOAK_TEST_*` identities and credentials; the provisioning
+script refuses to run unless the selected profile is exactly `test`.
+
+The deployed example is a contract, not deployable credentials. A deployment
+must replace its `.invalid` origins and example credentials through its
+configuration and secret stores. All deployed public URLs require HTTPS, and
+callback and post-logout destinations must be exact. Wildcards and unresolved
+placeholders fail `make keycloak-config-check` and CI.
+
+Client secrets are reconciled to Keycloak but never embedded in frontend code,
+stored in the canonical JSON, or printed by the live assertion. Rotate each BFF
+secret independently, update the matching backend OIDC registration in the same
+deployment, run the reconciler, and verify login before retiring the old
+deployment configuration.
 
 ## Frontend variables
 

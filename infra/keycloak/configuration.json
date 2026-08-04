@@ -1,0 +1,36 @@
+{
+  "realm": {
+    "name": "smart-business",
+    "displayName": "Smart Business",
+    "defaultLocale": "en",
+    "supportedLocales": ["en", "es"],
+    "registrationAllowed": false,
+    "resetPasswordAllowed": false,
+    "rememberMe": false
+  },
+  "roles": ["platform_admin", "support_agent"],
+  "clients": [
+    {
+      "clientId": "portal-bff",
+      "name": "Portal BFF",
+      "callbackPath": "/api/auth/callback/portal-bff",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "publicClient": false,
+      "bearerOnly": false
+    },
+    {
+      "clientId": "admin-bff",
+      "name": "Administration BFF",
+      "callbackPath": "/api/auth/callback/admin-bff",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "publicClient": false,
+      "bearerOnly": false
+    }
+  ]
+}

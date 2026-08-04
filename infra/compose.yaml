@@ -106,7 +106,7 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:26.7.0
     restart: unless-stopped
-    command: ['start-dev', '--import-realm']
+    command: ['start-dev']
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/${KEYCLOAK_DATABASE}
@@ -114,18 +114,14 @@ services:
       KC_DB_PASSWORD: ${KEYCLOAK_DATABASE_PASSWORD}
       KC_HEALTH_ENABLED: 'true'
       KC_METRICS_ENABLED: 'true'
-      KC_HOSTNAME: http://localhost:${KEYCLOAK_PORT}
+      KC_HOSTNAME: ${KEYCLOAK_PUBLIC_URL}
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      PORTAL_BFF_CLIENT_SECRET: ${PORTAL_BFF_CLIENT_SECRET}
-      ADMIN_BFF_CLIENT_SECRET: ${ADMIN_BFF_CLIENT_SECRET}
     depends_on:
       postgres:
         condition: service_healthy
     ports:
       - '127.0.0.1:${KEYCLOAK_PORT}:8080'
-    volumes:
-      - ./keycloak/realm-smart-business.json:/opt/keycloak/data/import/realm-smart-business.json:ro
     healthcheck:
       test:
         [
@@ -136,6 +132,54 @@ services:
       timeout: 5s
       retries: 18
       start_period: 30s
+    networks:
+      - platform
+
+  keycloak-config:
+    image: quay.io/keycloak/keycloak:26.7.0
+    restart: 'no'
+    entrypoint: ['/bin/bash', '/config/reconcile-realm.sh']
+    environment:
+      KEYCLOAK_ADMIN_URL: http://keycloak:8080
+      KEYCLOAK_ADMIN_USER: ${KEYCLOAK_ADMIN_USER}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KEYCLOAK_CONFIGURATION_PROFILE: ${KEYCLOAK_CONFIGURATION_PROFILE}
+      KEYCLOAK_PUBLIC_URL: ${KEYCLOAK_PUBLIC_URL}
+      PORTAL_BFF_CLIENT_SECRET: ${PORTAL_BFF_CLIENT_SECRET}
+      PORTAL_BFF_ORIGIN: ${PORTAL_BFF_ORIGIN}
+      PORTAL_BFF_CALLBACK_URI: ${PORTAL_BFF_CALLBACK_URI}
+      PORTAL_BFF_POST_LOGOUT_URI: ${PORTAL_BFF_POST_LOGOUT_URI}
+      ADMIN_BFF_CLIENT_SECRET: ${ADMIN_BFF_CLIENT_SECRET}
+      ADMIN_BFF_ORIGIN: ${ADMIN_BFF_ORIGIN}
+      ADMIN_BFF_CALLBACK_URI: ${ADMIN_BFF_CALLBACK_URI}
+      ADMIN_BFF_POST_LOGOUT_URI: ${ADMIN_BFF_POST_LOGOUT_URI}
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    volumes:
+      - ./keycloak/reconcile-realm.sh:/config/reconcile-realm.sh:ro
+    networks:
+      - platform
+
+  keycloak-test-users:
+    profiles: ['identity-test']
+    image: quay.io/keycloak/keycloak:26.7.0
+    restart: 'no'
+    entrypoint: ['/bin/bash', '/config/provision-test-users.sh']
+    environment:
+      KEYCLOAK_ADMIN_URL: http://keycloak:8080
+      KEYCLOAK_ADMIN_USER: ${KEYCLOAK_ADMIN_USER}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KEYCLOAK_CONFIGURATION_PROFILE: ${KEYCLOAK_CONFIGURATION_PROFILE}
+      KEYCLOAK_TEST_CUSTOMER_USERNAME: ${KEYCLOAK_TEST_CUSTOMER_USERNAME:-}
+      KEYCLOAK_TEST_CUSTOMER_PASSWORD: ${KEYCLOAK_TEST_CUSTOMER_PASSWORD:-}
+      KEYCLOAK_TEST_ADMIN_USERNAME: ${KEYCLOAK_TEST_ADMIN_USERNAME:-}
+      KEYCLOAK_TEST_ADMIN_PASSWORD: ${KEYCLOAK_TEST_ADMIN_PASSWORD:-}
+    depends_on:
+      keycloak-config:
+        condition: service_completed_successfully
+    volumes:
+      - ./keycloak/provision-test-users.sh:/config/provision-test-users.sh:ro
     networks:
       - platform
 
@@ -185,11 +229,11 @@ services:
 
 networks:
   platform:
-    name: smart-business-platform
+    name: ${PLATFORM_NETWORK_NAME}
 
 volumes:
   postgres-data:
-    name: smart-business-postgres-data
+    name: ${POSTGRES_DATA_VOLUME}
   garage-metadata:
     name: smart-business-garage-metadata
   garage-data:

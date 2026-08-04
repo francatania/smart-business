@@ -12,6 +12,7 @@ Protect `main` and require these exact checks before merging:
 - `End-to-end`
 - `Security`
 - `Compose configuration`
+- `Keycloak configuration`
 
 Also require pull requests, one approval, resolution of review conversations, dismissal of stale approvals, and the branch to be current before merge. Do not permit force pushes or branch deletion.
 
@@ -22,6 +23,9 @@ Also require pull requests, one approval, resolution of review conversations, di
 - A regenerated OpenAPI contract or TypeScript client that differs from the committed files.
 - Chromium smoke failures in either application, the PWA offline shell, or network-only API behavior.
 - Invalid Compose configuration or unhealthy application containers.
+- Unsafe Keycloak grants, wildcard or non-HTTPS deployed redirects, unresolved
+  placeholders, non-idempotent realm reconciliation, lost users after restart, or
+  test identities that can run under a deployable profile.
 - Representative secrets, Gitleaks findings, or high/critical dependency vulnerabilities.
 
 Test reports and relevant logs are uploaded even when a job fails. Playwright retains traces, screenshots, and videos only for failed attempts.
@@ -34,6 +38,6 @@ Dependabot proposes Maven, pnpm, GitHub Actions, and Docker updates each Monday.
 
 ## Local parity
 
-`make verify` runs backend and frontend verification, configuration and secret checks, Compose validation, API drift checks, Chromium smoke tests, and the same vulnerability scanners. It expects Docker to be available and leaves the local application stack running for troubleshooting. Use `make infra-down` when finished; it preserves named data volumes.
+`make verify` runs backend and frontend verification, configuration and secret checks, an isolated Keycloak reconciliation test, Compose validation, API drift checks, Chromium smoke tests, and the same vulnerability scanners. It expects Docker to be available and leaves the local application stack running for troubleshooting. The Keycloak integration test cleans up its own uniquely named PostgreSQL volume and network. Use `make infra-down` when finished; it preserves named local-development data volumes.
 
 `make verify-clean-checkout` archives tracked files into a validated temporary directory, runs both toolchains with their pinned containers, verifies Compose, and builds all application images without using local build output. It never starts or removes the persistent infrastructure volumes.

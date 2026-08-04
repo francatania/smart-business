@@ -65,13 +65,13 @@ The Vite servers proxy same-origin `/api` requests to the backend. The applicati
 
 | Surface            | URL                                               |
 | ------------------ | ------------------------------------------------- |
-| Portal PWA         | `http://localhost:5173/book`                      |
-| Administration     | `http://localhost:5174/calendar`                  |
+| Portal PWA         | `http://portal.localhost:5173/book`               |
+| Administration     | `http://admin.localhost:5174/calendar`            |
 | Backend API        | `http://localhost:8080/api/system/info`           |
 | Backend liveness   | `http://localhost:8082/actuator/health/liveness`  |
 | Backend readiness  | `http://localhost:8082/actuator/health/readiness` |
 | Prometheus metrics | `http://localhost:8082/actuator/prometheus`       |
-| Keycloak           | `http://localhost:8081`                           |
+| Keycloak           | `http://auth.localhost:8081`                      |
 | Garage S3          | `http://localhost:3900`                           |
 | Mailpit            | `http://localhost:8025`                           |
 
@@ -153,8 +153,15 @@ Local override and real credential files remain ignored by Git. Run these checks
 ```bash
 make secrets-check
 make configuration-check
+make keycloak-config-check
 make security-check
 ```
+
+`make infra-up` also runs an idempotent one-shot Keycloak reconciler. It creates
+or updates the `smart-business` realm, its stable platform roles, and the
+confidential `portal-bff` and `admin-bff` clients without deleting users. Run
+`make keycloak-reconcile` to reapply those settings after changing local
+configuration.
 
 ## Destructive reset
 
@@ -174,6 +181,7 @@ This reset is irreversible unless the data was backed up. It affects only the na
 - **Docker daemon unavailable:** start Docker and confirm the active context with `docker context show`. On Linux, confirm the current user can access the Docker socket.
 - **Containers remain unhealthy:** run `make infra-logs`, then inspect the specific service. PostgreSQL must be healthy before Keycloak or the backend can start.
 - **Credentials changed but login still fails:** initialization variables only apply to a new PostgreSQL volume. Either restore the original local values or perform the clearly destructive reset above.
+- **Keycloak settings appear stale:** run `make keycloak-config-check` and then `make keycloak-reconcile`. Client secrets and exact redirect origins come from the active environment file.
 - **Frontend API unavailable:** confirm the backend readiness endpoint is `UP`; both Vite and nginx proxy `/api` to port `8080`.
 - **Testcontainers cannot reach Docker:** confirm `/var/run/docker.sock` is accessible and no stale `DOCKER_HOST` points to another daemon.
 - **Generated API drift:** start the current backend, run `pnpm api:generate`, inspect the contract change, and commit the contract and client together.
