@@ -39,6 +39,13 @@ Vite server or container proxy forwards to Spring Boot. They never target a
 React route. Both clients allow only Authorization Code, require S256 PKCE, and
 disable implicit, direct-access, device, CIBA, and service-account grants.
 
+Compose gives Keycloak the `auth.localhost` network alias and runs its HTTP
+listener on port `8081` both inside and outside the local network. Consequently,
+the browser and the backend container use the same issuer
+`http://auth.localhost:8081/realms/smart-business`; this avoids accepting a token
+whose issuer differs from the discovery metadata. The isolated test stack uses
+the equivalent `auth.test.localhost:18081` alias and port.
+
 `make infra-up` starts the reconciler automatically. It is safe to run again:
 
 ```bash

@@ -51,9 +51,16 @@ services:
       DATABASE_PASSWORD: ${APP_DATABASE_PASSWORD}
       SERVER_PORT: '8080'
       MANAGEMENT_SERVER_PORT: '8082'
+      OIDC_ISSUER_URI: ${OIDC_ISSUER_URI}
+      PORTAL_BFF_CLIENT_SECRET: ${PORTAL_BFF_CLIENT_SECRET}
+      PORTAL_BFF_CALLBACK_URI: ${PORTAL_BFF_CALLBACK_URI}
+      ADMIN_BFF_CLIENT_SECRET: ${ADMIN_BFF_CLIENT_SECRET}
+      ADMIN_BFF_CALLBACK_URI: ${ADMIN_BFF_CALLBACK_URI}
     depends_on:
       postgres:
         condition: service_healthy
+      keycloak-config:
+        condition: service_completed_successfully
     ports:
       - '127.0.0.1:${BACKEND_PORT}:8080'
       - '127.0.0.1:${BACKEND_MANAGEMENT_PORT}:8082'
@@ -114,6 +121,7 @@ services:
       KC_DB_PASSWORD: ${KEYCLOAK_DATABASE_PASSWORD}
       KC_HEALTH_ENABLED: 'true'
       KC_METRICS_ENABLED: 'true'
+      KC_HTTP_PORT: ${KEYCLOAK_PORT}
       KC_HOSTNAME: ${KEYCLOAK_PUBLIC_URL}
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
@@ -121,7 +129,7 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - '127.0.0.1:${KEYCLOAK_PORT}:8080'
+      - '127.0.0.1:${KEYCLOAK_PORT}:${KEYCLOAK_PORT}'
     healthcheck:
       test:
         [
@@ -133,14 +141,16 @@ services:
       retries: 18
       start_period: 30s
     networks:
-      - platform
+      platform:
+        aliases:
+          - ${KEYCLOAK_NETWORK_ALIAS}
 
   keycloak-config:
     image: quay.io/keycloak/keycloak:26.7.0
     restart: 'no'
     entrypoint: ['/bin/bash', '/config/reconcile-realm.sh']
     environment:
-      KEYCLOAK_ADMIN_URL: http://keycloak:8080
+      KEYCLOAK_ADMIN_URL: http://keycloak:${KEYCLOAK_PORT}
       KEYCLOAK_ADMIN_USER: ${KEYCLOAK_ADMIN_USER}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KEYCLOAK_CONFIGURATION_PROFILE: ${KEYCLOAK_CONFIGURATION_PROFILE}
@@ -167,7 +177,7 @@ services:
     restart: 'no'
     entrypoint: ['/bin/bash', '/config/provision-test-users.sh']
     environment:
-      KEYCLOAK_ADMIN_URL: http://keycloak:8080
+      KEYCLOAK_ADMIN_URL: http://keycloak:${KEYCLOAK_PORT}
       KEYCLOAK_ADMIN_USER: ${KEYCLOAK_ADMIN_USER}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KEYCLOAK_CONFIGURATION_PROFILE: ${KEYCLOAK_CONFIGURATION_PROFILE}

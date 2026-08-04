@@ -6,4 +6,5 @@
 **/coverage
 **/target
 playwright-report
-test-results
+**/test-results
+**/*.tsbuildinfo

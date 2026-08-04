@@ -18,16 +18,21 @@ The `deployed` profile intentionally has no confidential defaults. Missing requi
 
 ## Backend variables
 
-| Variable                         | Required in `deployed` | Owner    | Description                                                    |
-| -------------------------------- | ---------------------- | -------- | -------------------------------------------------------------- |
-| `SPRING_PROFILES_ACTIVE`         | Yes                    | Platform | Must be `deployed` outside local development and tests         |
-| `SMART_BUSINESS_ENVIRONMENT`     | Yes                    | Platform | Short environment identifier such as `staging` or `production` |
-| `SMART_BUSINESS_PUBLIC_BASE_URL` | Yes                    | Platform | Public portal origin; not a secret                             |
-| `DATABASE_URL`                   | Yes                    | Database | PostgreSQL JDBC URL including `currentSchema=smart_business`   |
-| `DATABASE_USERNAME`              | Yes                    | Database | Application database user                                      |
-| `DATABASE_PASSWORD`              | Yes                    | Database | Application database credential                                |
-| `SERVER_PORT`                    | No                     | Platform | Application HTTP port; defaults to `8080`                      |
-| `MANAGEMENT_SERVER_PORT`         | No                     | Platform | Private management port; defaults to `8082`                    |
+| Variable                         | Required in `deployed` | Owner    | Description                                                     |
+| -------------------------------- | ---------------------- | -------- | --------------------------------------------------------------- |
+| `SPRING_PROFILES_ACTIVE`         | Yes                    | Platform | Must be `deployed` outside local development and tests          |
+| `SMART_BUSINESS_ENVIRONMENT`     | Yes                    | Platform | Short environment identifier such as `staging` or `production`  |
+| `SMART_BUSINESS_PUBLIC_BASE_URL` | Yes                    | Platform | Public portal origin; not a secret                              |
+| `DATABASE_URL`                   | Yes                    | Database | PostgreSQL JDBC URL including `currentSchema=smart_business`    |
+| `DATABASE_USERNAME`              | Yes                    | Database | Application database user                                       |
+| `DATABASE_PASSWORD`              | Yes                    | Database | Application database credential                                 |
+| `OIDC_ISSUER_URI`                | Yes                    | Identity | Exact `smart-business` realm issuer used for provider discovery |
+| `PORTAL_BFF_CLIENT_SECRET`       | Yes                    | Identity | Portal confidential-client credential                           |
+| `PORTAL_BFF_CALLBACK_URI`        | Yes                    | Identity | Exact Portal backend callback URI                               |
+| `ADMIN_BFF_CLIENT_SECRET`        | Yes                    | Identity | Administration confidential-client credential                   |
+| `ADMIN_BFF_CALLBACK_URI`         | Yes                    | Identity | Exact Administration backend callback URI                       |
+| `SERVER_PORT`                    | No                     | Platform | Application HTTP port; defaults to `8080`                       |
+| `MANAGEMENT_SERVER_PORT`         | No                     | Platform | Private management port; defaults to `8082`                     |
 
 Garage credentials in `infra/.env.example` are development-only foundations. Shared environments must inject them from a secret manager and rotate them independently.
 
@@ -67,6 +72,17 @@ stored in the canonical JSON, or printed by the live assertion. Rotate each BFF
 secret independently, update the matching backend OIDC registration in the same
 deployment, run the reconciler, and verify login before retiring the old
 deployment configuration.
+
+The backend normally derives authorization, token, and JWK endpoints from
+`OIDC_ISSUER_URI`. `OIDC_AUTHORIZATION_URI`, `OIDC_TOKEN_URI`, and
+`OIDC_JWK_SET_URI` are a test-only, all-or-nothing override used to keep Spring
+context tests independent from a running identity provider. Shared deployments
+must rely on issuer discovery and must not define these overrides.
+
+Callback values must be absolute HTTP(S) URLs with the exact paths
+`/api/auth/callback/portal-bff` and `/api/auth/callback/admin-bff`. The deployed
+configuration has no fallback issuer, client secret, or callback: missing values
+fail backend startup instead of silently using local credentials.
 
 ## Frontend variables
 

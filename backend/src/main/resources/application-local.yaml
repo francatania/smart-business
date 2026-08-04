@@ -1,6 +1,13 @@
 smart-business:
   environment: local
   public-base-url: ${SMART_BUSINESS_PUBLIC_BASE_URL:http://localhost:5173}
+  identity:
+    oidc:
+      issuer-uri: ${OIDC_ISSUER_URI:http://auth.localhost:8081/realms/smart-business}
+      portal-client-secret: ${PORTAL_BFF_CLIENT_SECRET:local-portal-bff-secret}
+      portal-callback-uri: ${PORTAL_BFF_CALLBACK_URI:http://portal.localhost:5173/api/auth/callback/portal-bff}
+      admin-client-secret: ${ADMIN_BFF_CLIENT_SECRET:local-admin-bff-secret}
+      admin-callback-uri: ${ADMIN_BFF_CALLBACK_URI:http://admin.localhost:5174/api/auth/callback/admin-bff}
 
 spring:
   config:

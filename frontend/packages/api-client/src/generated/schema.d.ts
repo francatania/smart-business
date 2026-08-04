@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+  '/auth/login/{surface}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Start the Portal or Administration OIDC login flow */
+    get: operations['initiateLogin'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/system/info': {
     parameters: {
       query?: never;
@@ -38,6 +55,36 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+  initiateLogin: {
+    parameters: {
+      query?: {
+        /** @description Allowlisted relative destination after login */
+        returnTo?: string;
+      };
+      header?: never;
+      path: {
+        surface: 'portal' | 'admin';
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Redirect to the selected confidential OIDC client */
+      302: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unknown application surface */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   systemInfo: {
     parameters: {
       query?: never;

@@ -18,6 +18,34 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/auth/login/{surface}": {
+      "get": {
+        "operationId": "initiateLogin",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "surface",
+            "required": true,
+            "schema": { "enum": ["portal", "admin"], "type": "string" }
+          },
+          {
+            "description": "Allowlisted relative destination after login",
+            "in": "query",
+            "name": "returnTo",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to the selected confidential OIDC client"
+          },
+          "404": { "description": "Unknown application surface" }
+        },
+        "summary": "Start the Portal or Administration OIDC login flow",
+        "tags": ["auth-login-controller"]
+      }
+    },
     "/system/info": {
       "get": {
         "operationId": "systemInfo",

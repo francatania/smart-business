@@ -1,6 +1,13 @@
 smart-business:
   environment: ${SMART_BUSINESS_ENVIRONMENT}
   public-base-url: ${SMART_BUSINESS_PUBLIC_BASE_URL}
+  identity:
+    oidc:
+      issuer-uri: ${OIDC_ISSUER_URI}
+      portal-client-secret: ${PORTAL_BFF_CLIENT_SECRET}
+      portal-callback-uri: ${PORTAL_BFF_CALLBACK_URI}
+      admin-client-secret: ${ADMIN_BFF_CLIENT_SECRET}
+      admin-callback-uri: ${ADMIN_BFF_CALLBACK_URI}
 
 spring:
   main:

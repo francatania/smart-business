@@ -2,7 +2,7 @@
 
 Smart Business is a business-agnostic platform for appointment-based personal care businesses. It combines scheduling, organization-owned customer service records, secure media, and future AI-assisted consultation. The initial product targets barbershops while keeping domain language suitable for other verticals.
 
-The current Platform Foundation provides an executable Spring Boot modular monolith, PostgreSQL persistence, Keycloak, S3-compatible local storage, email capture, an installable customer/professional portal, a business administration application, generated OpenAPI types, observability, tests, and CI gates. Booking, identity behavior, customer records, media workflows, and AI behavior are delivered by later epics.
+The current foundation provides an executable Spring Boot modular monolith, PostgreSQL persistence, local object storage compatible with S3, email capture, an installable customer/professional portal, a business administration application, generated OpenAPI types, observability, tests, and CI gates. Keycloak supplies the identity-provider foundation, including the server-side Portal and Administration OIDC login flow. User provisioning, session policy, authorization, logout, Google, passkeys, booking, customer records, media workflows, and AI behavior are delivered by later issues and epics.
 
 ## Repository layout
 
@@ -63,17 +63,19 @@ make admin-dev
 
 The Vite servers proxy same-origin `/api` requests to the backend. The applications are available at:
 
-| Surface            | URL                                               |
-| ------------------ | ------------------------------------------------- |
-| Portal PWA         | `http://portal.localhost:5173/book`               |
-| Administration     | `http://admin.localhost:5174/calendar`            |
-| Backend API        | `http://localhost:8080/api/system/info`           |
-| Backend liveness   | `http://localhost:8082/actuator/health/liveness`  |
-| Backend readiness  | `http://localhost:8082/actuator/health/readiness` |
-| Prometheus metrics | `http://localhost:8082/actuator/prometheus`       |
-| Keycloak           | `http://auth.localhost:8081`                      |
-| Garage S3          | `http://localhost:3900`                           |
-| Mailpit            | `http://localhost:8025`                           |
+| Surface            | URL                                                  |
+| ------------------ | ---------------------------------------------------- |
+| Portal PWA         | `http://portal.localhost:5173/book`                  |
+| Administration     | `http://admin.localhost:5174/calendar`               |
+| Backend API        | `http://localhost:8080/api/system/info`              |
+| Portal login       | `http://portal.localhost:5173/api/auth/login/portal` |
+| Admin login        | `http://admin.localhost:5174/api/auth/login/admin`   |
+| Backend liveness   | `http://localhost:8082/actuator/health/liveness`     |
+| Backend readiness  | `http://localhost:8082/actuator/health/readiness`    |
+| Prometheus metrics | `http://localhost:8082/actuator/prometheus`          |
+| Keycloak           | `http://auth.localhost:8081`                         |
+| Garage S3          | `http://localhost:3900`                              |
+| Mailpit            | `http://localhost:8025`                              |
 
 The management listener is loopback-only in local Compose. A deployed environment must restrict it to authorized operational networks.
 
