@@ -7,7 +7,7 @@ COPY frontend/apps/portal ./frontend/apps/portal
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @smart-business/portal build
 
-FROM nginx:1.29.4-alpine
+FROM nginx:1.31.3-alpine
 COPY frontend/apps/portal/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /workspace/frontend/apps/portal/dist /usr/share/nginx/html
 EXPOSE 80
