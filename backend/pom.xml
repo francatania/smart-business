@@ -17,6 +17,7 @@
 		<java.version>25</java.version>
 		<spring-modulith.version>2.1.0</spring-modulith.version>
 		<spotless-maven-plugin.version>3.6.0</spotless-maven-plugin.version>
+		<springdoc-openapi.version>3.0.3</springdoc-openapi.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -54,6 +55,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+			<version>${springdoc-openapi.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.flywaydb</groupId>

@@ -1,3 +1,4 @@
 # Shared types
 
-This package contains stable cross-application TypeScript types that are not generated from OpenAPI.
+Framework-neutral identifiers, time values, roles, and other cross-application
+types. This package has no runtime dependencies.
