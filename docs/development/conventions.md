@@ -1,5 +1,7 @@
 # Development Conventions
 
+Environment variables and secret ownership are defined in [Configuration and Secret Handling](./configuration.md).
+
 ## Language
 
 Repository documentation, source code, domain names, commit messages, and GitHub issues are written in English. User-facing translations belong to application localization resources.

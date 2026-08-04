@@ -1,0 +1,12 @@
+smart-business:
+  environment: local
+  public-base-url: ${SMART_BUSINESS_PUBLIC_BASE_URL:http://localhost:5173}
+
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/smart_business?currentSchema=smart_business}
+    username: ${DATABASE_USERNAME:smart_business_app}
+    password: ${DATABASE_PASSWORD:local-smart-business-app}

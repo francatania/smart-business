@@ -1,0 +1,12 @@
+smart-business:
+  environment: test
+  public-base-url: http://localhost
+
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/smart_business_test?currentSchema=smart_business}
+    username: ${DATABASE_USERNAME:smart_business_test}
+    password: ${DATABASE_PASSWORD:smart-business-test-password}

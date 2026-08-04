@@ -45,6 +45,7 @@ services:
       context: ../backend
     restart: unless-stopped
     environment:
+      SPRING_PROFILES_ACTIVE: local
       DATABASE_URL: jdbc:postgresql://postgres:5432/${APP_DATABASE}?currentSchema=smart_business
       DATABASE_USERNAME: ${APP_DATABASE_USER}
       DATABASE_PASSWORD: ${APP_DATABASE_PASSWORD}

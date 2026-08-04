@@ -1,7 +1,9 @@
 import { createApiClient } from '@smart-business/api-client';
 import { useQuery } from '@tanstack/react-query';
 
-const api = createApiClient();
+import { publicConfig } from '../config';
+
+const api = createApiClient(publicConfig.apiBaseUrl);
 
 export function AppStatus() {
   const systemInfo = useQuery({

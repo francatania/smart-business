@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help setup infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev api-generate format test verify compose-up
+.PHONY: help setup infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev api-generate format test verify compose-up secrets-check configuration-check
 
 help:
 	@echo "Smart Business development commands"
@@ -13,6 +13,7 @@ help:
 	@echo "  make admin-dev      Run the administration development server"
 	@echo "  make compose-up     Start infrastructure and optional application containers"
 	@echo "  make api-generate   Regenerate the OpenAPI TypeScript client"
+	@echo "  make secrets-check  Scan for representative committed-secret patterns"
 	@echo "  make format         Format supported repository files"
 	@echo "  make test           Run backend and frontend tests"
 	@echo "  make verify         Run the local CI-equivalent verification"
@@ -51,6 +52,13 @@ compose-up:
 api-generate:
 	pnpm api:generate
 
+secrets-check:
+	./scripts/test-secret-scanner.sh
+	./scripts/verify-no-secrets.sh
+
+configuration-check:
+	./scripts/verify-public-frontend-config.sh
+
 format:
 	cd backend && ./mvnw spotless:apply
 	pnpm format
@@ -62,4 +70,6 @@ test:
 verify:
 	cd backend && ./mvnw verify
 	pnpm verify
+	$(MAKE) secrets-check
+	$(MAKE) configuration-check
 	docker compose --env-file infra/.env.example -f infra/compose.yaml config --quiet
