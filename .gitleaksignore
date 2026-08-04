@@ -1,0 +1,2 @@
+# False positive: the README phrase "Keycloak, S3-compatible" is not a credential.
+de1e8c1ce95c4c44ae48bf2fe3a78696c073026a:README.md:generic-api-key:5
