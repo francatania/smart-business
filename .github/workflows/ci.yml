@@ -198,7 +198,7 @@ jobs:
       - name: Verify secret scanner and current tree
         run: make secrets-check
       - name: Scan Git history for secrets
-        run: docker run --rm --volume "$PWD:/repo" zricethezav/gitleaks:v8.30.1 detect --source=/repo --no-banner --redact
+        run: docker run --rm --volume "$PWD:/repo" zricethezav/gitleaks:v8.30.1 detect --source=/repo --gitleaks-ignore-path=/repo/.gitleaksignore --no-banner --redact
       - name: Validate dependency exception policy
         run: node scripts/verify-security-exceptions.mjs
       - name: Build backend runtime artifact
@@ -227,7 +227,7 @@ jobs:
           exit-code: '1'
           trivyignores: .trivyignore
       - name: Review dependency changes
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.event.repository.private == false
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: high

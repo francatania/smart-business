@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help setup infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev api-generate format test test-fast test-integration e2e verify compose-up secrets-check configuration-check security-check
+.PHONY: help setup infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev api-generate format test test-fast test-integration e2e verify verify-clean-checkout compose-up secrets-check configuration-check security-check
 
 help:
 	@echo "Smart Business development commands"
@@ -21,6 +21,7 @@ help:
 	@echo "  make test-integration Run PostgreSQL integration tests"
 	@echo "  make e2e            Run Playwright against the containerized applications"
 	@echo "  make verify         Run the local CI-equivalent verification"
+	@echo "  make verify-clean-checkout Verify tracked files in an isolated temporary checkout"
 	@echo "  make infra-reset    Delete named local development volumes (confirmation required)"
 
 setup:
@@ -98,3 +99,6 @@ verify:
 	pnpm api:check
 	pnpm e2e
 	$(MAKE) security-check
+
+verify-clean-checkout:
+	./scripts/verify-clean-checkout.sh
