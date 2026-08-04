@@ -95,8 +95,8 @@ Initially supported or planned methods:
 
 - Google through Keycloak identity brokering.
 - Passkeys after a verified identity exists.
-- Email magic link or one-time code, pending a Keycloak-compatible implementation decision.
-- Verified phone or messaging-channel code as a possible later option.
+
+The MVP does not include a Smart Business password, email magic link, email one-time code, SMS code, or messaging-provider code. A user who loses access to Google and every enrolled passkey has no automated recovery path until an auditable recovery design is delivered. This limitation and its security rationale are defined in [ADR 0001](./decisions/0001-identity-session-and-recovery-policy.md).
 
 Google authentication requests only the identity information needed for sign-in. Access to unrelated Google APIs is not required.
 
@@ -136,7 +136,7 @@ Recommended enrollment moment:
 1. Complete the first booking with a verified identity.
 2. Explain the benefit of faster future access.
 3. Offer Keycloak's passkey registration flow.
-4. Keep another verified authentication or recovery method available.
+4. Explain that removing the last usable authenticator can make the account inaccessible in the MVP.
 
 Passkey creation must not be required to complete the first booking.
 
@@ -149,6 +149,7 @@ The public booking page is expected to be opened from Instagram and similar appl
 - If the embedded browser cannot complete the Keycloak or upstream provider flow, the application offers an explicit **Open in browser** path.
 - Installation prompts and passkey enrollment happen after booking, preferably in the system browser or installed PWA.
 - Moving between an embedded browser, system browser, and installed PWA may require authentication again.
+- Smart Business does not transfer an application session between browser contexts.
 
 ## Professional and Staff Authentication
 
@@ -162,7 +163,7 @@ Staff access requires:
 - One or more organization roles or policies in PostgreSQL.
 - A valid Spring application session.
 
-Passkeys are appropriate for professional mobile access. Owners and administrators may require stronger reauthentication or multi-factor controls for sensitive settings.
+Passkeys are appropriate for professional mobile access. Staff authentication is considered recent for 12 hours. Sensitive operations require strong reauthentication completed within the preceding 15 minutes. The Identity and Access epic initially enforces this requirement for `platform_admin`; organization owner and administrator capabilities will adopt it when those capabilities are implemented.
 
 ## Roles and Authorization
 
@@ -209,10 +210,14 @@ Keycloak manages links between its user and Google or future external identity p
 - Conflicting verified identities require an account-recovery or support flow.
 - Linking an identity does not merge organization-private records across different Smart Business users without a deliberate, auditable resolution process.
 - Changing an email address does not change the local user's external identity key.
+- Losing every authenticator does not permit organization staff to recover an identity or move private records to another user.
 
 ## Session and Token Principles
 
 - Use secure, HTTP-only, appropriately scoped cookies for Spring application sessions.
+- Use independent, host-only Portal and Admin cookies. Keycloak provides SSO between applications without merging their Spring sessions.
+- Apply a 30-day inactivity timeout and a 90-day absolute lifetime to both application sessions.
+- Treat staff authentication as recent for 12 hours and sensitive strong reauthentication as recent for 15 minutes.
 - Keep Keycloak access and refresh tokens on the server side for browser applications.
 - Do not use the Keycloak JavaScript adapter as the primary browser authentication architecture.
 - Do not store provider or Keycloak tokens in general-purpose browser storage.
@@ -236,8 +241,10 @@ Keycloak is critical infrastructure and requires:
 - TLS and secure proxy configuration.
 - Version-controlled, reproducible realm and client configuration.
 - Environment-specific secret management.
-- Branded and localized authentication pages.
+- Globally branded Smart Business authentication pages, with English as the default language and Spanish as the supported alternative.
 - Email configuration for verification, recovery, and security notifications.
+- Idempotent configuration reconciliation that updates existing realms without deleting users.
+- Test identities provisioned only by explicit CI or test setup, never by deployable profiles.
 
 Local development may use the same PostgreSQL server for Smart Business and Keycloak, but they use separate logical databases and credentials.
 
@@ -255,6 +262,16 @@ Local development may use the same PostgreSQL server for Smart Business and Keyc
 10. Keycloak contains only stable platform-wide roles; organization roles and permissions remain in PostgreSQL.
 11. The application never receives or stores fingerprint or face biometric data.
 12. Staff authentication and authorization are stricter than customer booking access.
+13. Portal and Admin use isolated host-only application sessions; Keycloak provides cross-application SSO.
+14. Both application sessions expire after 30 days of inactivity or 90 days absolutely.
+15. Staff authentication is fresh for 12 hours; sensitive strong reauthentication is fresh for 15 minutes.
+16. Google is the primary MVP identity and passkeys are optional after verification; other verification channels are deferred.
+17. The MVP has no automatic recovery after all authenticators are lost, and identity is never recovered or merged from contact-field matches.
+18. Return targets are limited to validated same-application relative paths or configured safe destinations.
+19. Keycloak configuration is version-controlled and reconciled idempotently, while secrets remain environment-specific.
+20. Keycloak uses global Smart Business branding, English by default, and Spanish as an alternative.
+
+The detailed policy, rationale, local and deployed cookie defaults, and follow-up work are recorded in [ADR 0001: Identity, Session, and Recovery Policy](./decisions/0001-identity-session-and-recovery-policy.md).
 
 ## Reference Documentation
 
@@ -262,12 +279,8 @@ Local development may use the same PostgreSQL server for Smart Business and Keyc
 - [Keycloak JavaScript adapter security guidance](https://www.keycloak.org/securing-apps/javascript-adapter)
 - [Spring Security OAuth 2.0 and OpenID Connect](https://docs.spring.io/spring-security/reference/servlet/oauth2/)
 
-## Open Questions
+## Deferred Decisions
 
-- Which non-Google verification channel launches first: email, SMS, or a messaging provider.
-- Whether the non-Google verification flow uses a built-in Keycloak capability, a custom authenticator, or another verified mechanism.
-- Session duration for customer and staff accounts.
-- Whether staff must enroll a passkey or another second factor.
-- Account recovery requirements when all authenticators are lost.
-- How Keycloak realm configuration and secrets are promoted between environments.
-- Branding and localization requirements for Keycloak-hosted pages.
+- Which additional verified identity method, if any, follows Google and passkeys after the MVP.
+- The auditable recovery mechanism for a user who loses all authenticators, tracked in [#62](https://github.com/francatania/smart-business/issues/62).
+- Whether a future risk model changes the authentication-freshness windows or requires mandatory passkey enrollment for specific capabilities.
