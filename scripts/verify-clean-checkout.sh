@@ -26,6 +26,12 @@ docker --context default compose \
   --profile applications config --quiet
 
 docker --context default run --rm \
+  --volume "$checkout_directory:/workspace" \
+  --workdir /workspace \
+  node:24.18.1-bookworm \
+  node scripts/validate-keycloak-config.mjs
+
+docker --context default run --rm \
   --add-host host.docker.internal:host-gateway \
   --env TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal \
   --volume /var/run/docker.sock:/var/run/docker.sock \

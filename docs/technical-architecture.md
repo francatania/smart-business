@@ -322,7 +322,8 @@ The backend evaluates organization membership, location assignment, customer rel
 
 Keycloak Organizations is not the source of truth for Smart Business organizations or memberships in the initial architecture. It may be evaluated later for enterprise SSO, invitations, or identity-first login. If adopted, ownership and synchronization rules must be defined before implementation.
 
-Email magic links or one-time codes remain part of the product authentication plan. Whether they are implemented through a supported Keycloak flow, a custom Keycloak authenticator, or a different verified mechanism remains open.
+The MVP does not provide email magic links or one-time codes. Recovery after all
+verified authenticators are lost requires a separate auditable design.
 
 ## Frontend Architecture
 
@@ -542,9 +543,7 @@ Kubernetes is not part of the initial architecture. A simpler container platform
 - Which S3-compatible provider to use in production.
 - Which UI component and styling system to use across the frontend workspace.
 - Whether deployment hostnames use separate subdomains or path-based routing.
-- Which email provider to use for magic links and notifications.
-- Whether the non-Google verification flow uses a built-in Keycloak capability, a custom authenticator, or another verified mechanism.
-- How Keycloak realm configuration, secrets, and environment-specific settings are promoted between environments.
-- Branding and localization requirements for Keycloak-hosted authentication pages.
+- Which email provider to use for transactional notifications.
+- Which auditable identity-recovery mechanism, if any, follows the MVP.
 - Which production container platform and managed PostgreSQL provider to use.
 - Whether AI initially uses a third-party provider or a separately hosted model.

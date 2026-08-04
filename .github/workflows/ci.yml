@@ -240,3 +240,18 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Validate Docker Compose configuration
         run: docker compose --env-file infra/.env.example -f infra/compose.yaml --profile applications config --quiet
+
+  keycloak-configuration:
+    name: Keycloak configuration
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+      - name: Validate version-controlled Keycloak configuration
+        run: make keycloak-config-check
+      - name: Verify reconciliation and test identity isolation
+        run: make keycloak-integration-test
