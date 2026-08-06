@@ -85,6 +85,41 @@ The browser receives a secure, HTTP-only cookie for the Spring application sessi
 
 Spring Session JDBC stores application sessions so multiple backend replicas can serve the same authenticated user. Application logout invalidates the Spring session and completes the appropriate Keycloak logout flow.
 
+### BFF login endpoints
+
+Portal and Administration start authentication through separate backend entry
+points:
+
+| Surface        | Login entry point                                    | OIDC callback                   | Default destination |
+| -------------- | ---------------------------------------------------- | ------------------------------- | ------------------- |
+| Portal         | `GET /api/auth/login/portal?returnTo=/relative-path` | `/api/auth/callback/portal-bff` | `/book`             |
+| Administration | `GET /api/auth/login/admin?returnTo=/relative-path`  | `/api/auth/callback/admin-bff`  | `/calendar`         |
+
+The entry point records the validated destination in the server-side session
+and redirects to Spring Security's Authorization Code flow. The callback code,
+OIDC state, PKCE verifier, access token, ID token, and refresh token are never
+returned to React or stored in browser-managed persistence. Successful
+authentication rotates the application-session identifier and redirects only
+to the stored relative destination.
+
+Return destinations are an application-owned allowlist rather than arbitrary
+browser input. Portal permits `/book`, `/appointments`, and
+`/professional/schedule`; Administration permits `/calendar`, `/customers`,
+`/configuration`, and `/metrics`. Query strings are allowed on these exact
+paths. Absolute URLs, protocol-relative URLs, fragments, control characters,
+encoded redirect attempts, and paths belonging to the other surface fall back
+to the surface's default destination. This list must be extended deliberately
+when a new authenticated top-level route is introduced.
+
+The backend discovers Keycloak from the configured issuer and registers exactly
+two confidential clients: `portal-bff` and `admin-bff`. Both require
+Authorization Code with S256 PKCE and use `client_secret_basic` for the
+server-to-server token exchange. All API routes are authenticated by default;
+only system information, public booking resources, authentication protocol
+routes, API documentation, and management endpoints are explicitly public.
+Unauthenticated API access returns `application/problem+json` rather than an
+HTML login redirect.
+
 ## Customer Authentication
 
 ### First booking

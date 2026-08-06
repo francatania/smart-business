@@ -116,6 +116,8 @@ export function validateEnvironment(values, expectedProfile, label) {
 
   const required = [
     'KEYCLOAK_PUBLIC_URL',
+    'KEYCLOAK_NETWORK_ALIAS',
+    'OIDC_ISSUER_URI',
     'KEYCLOAK_ADMIN_PASSWORD',
     'PORTAL_BFF_CLIENT_SECRET',
     'PORTAL_BFF_ORIGIN',
@@ -148,6 +150,15 @@ export function validateEnvironment(values, expectedProfile, label) {
     expectedProfile,
   );
   invariant(keycloakUrl.pathname === '/', `${label} KEYCLOAK_PUBLIC_URL must be an origin.`);
+  invariant(
+    values.KEYCLOAK_NETWORK_ALIAS === keycloakUrl.hostname,
+    `${label} KEYCLOAK_NETWORK_ALIAS must match the public Keycloak hostname.`,
+  );
+  const issuerUrl = validateUrl(values.OIDC_ISSUER_URI, 'OIDC_ISSUER_URI', expectedProfile);
+  invariant(
+    issuerUrl.origin === keycloakUrl.origin && issuerUrl.pathname === '/realms/smart-business',
+    `${label} OIDC_ISSUER_URI must identify the smart-business realm on the public Keycloak origin.`,
+  );
 
   for (const client of configuration.clients) {
     const prefix = client.clientId === 'portal-bff' ? 'PORTAL_BFF' : 'ADMIN_BFF';

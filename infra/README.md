@@ -6,7 +6,7 @@ Docker Compose provisions PostgreSQL, Keycloak, Garage, and Mailpit for local de
 
 ```bash
 make infra-up
-docker compose --env-file infra/.env.example -f infra/compose.yaml ps
+docker compose --env-file infra/.env -f infra/compose.yaml ps
 make infra-logs
 ```
 
@@ -39,6 +39,13 @@ Vite server or container proxy forwards to Spring Boot. They never target a
 React route. Both clients allow only Authorization Code, require S256 PKCE, and
 disable implicit, direct-access, device, CIBA, and service-account grants.
 
+Compose gives Keycloak the `auth.localhost` network alias and runs its HTTP
+listener on port `8081` both inside and outside the local network. Consequently,
+the browser and the backend container use the same issuer
+`http://auth.localhost:8081/realms/smart-business`; this avoids accepting a token
+whose issuer differs from the discovery metadata. The isolated test stack uses
+the equivalent `auth.test.localhost:18081` alias and port.
+
 `make infra-up` starts the reconciler automatically. It is safe to run again:
 
 ```bash
@@ -63,7 +70,7 @@ The test-user service refuses every configuration profile except `test`.
 
 ## Environment promotion
 
-- `infra/.env.example` defines safe local-development origins and disposable credentials.
+- `infra/.env.example` is the committed template for safe local-development origins and disposable credentials. `infra/.env` is the ignored per-machine copy consumed by `make` and Docker Compose.
 - `keycloak/environments/test.env.example` overlays isolated CI/test values and is the only profile containing deterministic test identities.
 - `keycloak/environments/deployed.env.example` documents the deployed Keycloak contract. Its `.invalid` hosts and example credentials must be replaced by the deployment platform and secret manager.
 

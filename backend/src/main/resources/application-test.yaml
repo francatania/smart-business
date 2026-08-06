@@ -1,6 +1,16 @@
 smart-business:
   environment: test
   public-base-url: http://localhost
+  identity:
+    oidc:
+      issuer-uri: ${OIDC_ISSUER_URI:http://auth.test.localhost:18081/realms/smart-business}
+      authorization-uri: ${OIDC_AUTHORIZATION_URI:http://auth.test.localhost:18081/realms/smart-business/protocol/openid-connect/auth}
+      token-uri: ${OIDC_TOKEN_URI:http://auth.test.localhost:18081/realms/smart-business/protocol/openid-connect/token}
+      jwk-set-uri: ${OIDC_JWK_SET_URI:http://auth.test.localhost:18081/realms/smart-business/protocol/openid-connect/certs}
+      portal-client-secret: ${PORTAL_BFF_CLIENT_SECRET:test-portal-bff-client-secret}
+      portal-callback-uri: ${PORTAL_BFF_CALLBACK_URI:http://portal.test.localhost:15173/api/auth/callback/portal-bff}
+      admin-client-secret: ${ADMIN_BFF_CLIENT_SECRET:test-admin-bff-client-secret}
+      admin-callback-uri: ${ADMIN_BFF_CALLBACK_URI:http://admin.test.localhost:15174/api/auth/callback/admin-bff}
 
 spring:
   config:

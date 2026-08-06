@@ -1,6 +1,8 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help setup infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev api-generate format test test-fast test-integration e2e verify verify-clean-checkout compose-up secrets-check configuration-check security-check keycloak-config-check keycloak-reconcile keycloak-integration-test
+COMPOSE_ENV_FILE ?= infra/.env
+
+.PHONY: help setup local-config infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev api-generate format test test-fast test-integration e2e verify verify-clean-checkout app-up compose-up secrets-check configuration-check security-check keycloak-config-check keycloak-reconcile keycloak-integration-test
 
 help:
 	@echo "Smart Business development commands"
@@ -11,7 +13,8 @@ help:
 	@echo "  make backend-run    Run the Spring Boot backend on the host"
 	@echo "  make portal-dev     Run the portal development server"
 	@echo "  make admin-dev      Run the administration development server"
-	@echo "  make compose-up     Start infrastructure and optional application containers"
+	@echo "  make app-up         Start infrastructure and application containers"
+	@echo "  make compose-up     Alias for make app-up"
 	@echo "  make api-generate   Regenerate the OpenAPI TypeScript client"
 	@echo "  make secrets-check  Scan for representative committed-secret patterns"
 	@echo "  make keycloak-config-check Validate canonical and environment Keycloak settings"
@@ -28,22 +31,26 @@ help:
 	@echo "  make infra-reset    Delete named local development volumes (confirmation required)"
 
 setup:
+	$(MAKE) local-config
 	corepack enable
 	corepack prepare pnpm@10.34.0 --activate
 	pnpm install
 
-infra-up:
-	docker compose --env-file infra/.env.example -f infra/compose.yaml up -d
+local-config:
+	@test -f "$(COMPOSE_ENV_FILE)" || cp infra/.env.example "$(COMPOSE_ENV_FILE)"
 
-infra-down:
-	docker compose --env-file infra/.env.example -f infra/compose.yaml down
+infra-up: local-config
+	docker compose --env-file $(COMPOSE_ENV_FILE) -f infra/compose.yaml up -d
 
-infra-logs:
-	docker compose --env-file infra/.env.example -f infra/compose.yaml logs -f
+infra-down: local-config
+	docker compose --env-file $(COMPOSE_ENV_FILE) -f infra/compose.yaml down
 
-infra-reset:
+infra-logs: local-config
+	docker compose --env-file $(COMPOSE_ENV_FILE) -f infra/compose.yaml logs -f
+
+infra-reset: local-config
 	@test "$(CONFIRM)" = "delete-smart-business-local-data" || (echo "Refusing to delete local volumes. Re-run with CONFIRM=delete-smart-business-local-data" && exit 1)
-	docker compose --env-file infra/.env.example -f infra/compose.yaml down --volumes
+	docker compose --env-file $(COMPOSE_ENV_FILE) -f infra/compose.yaml down --volumes
 
 backend-run:
 	cd backend && ./mvnw spring-boot:run
@@ -54,8 +61,10 @@ portal-dev:
 admin-dev:
 	pnpm --filter @smart-business/admin dev
 
-compose-up:
-	docker compose --env-file infra/.env.example -f infra/compose.yaml --profile applications up -d --build
+app-up: local-config
+	docker compose --env-file $(COMPOSE_ENV_FILE) -f infra/compose.yaml --profile applications up -d --build
+
+compose-up: app-up
 
 api-generate:
 	pnpm api:generate
@@ -67,13 +76,13 @@ secrets-check:
 configuration-check:
 	./scripts/verify-public-frontend-config.sh
 
-keycloak-config-check:
+keycloak-config-check: local-config
 	node scripts/validate-keycloak-config.mjs
 	node scripts/test-keycloak-config-validator.mjs
-	docker compose --env-file infra/.env.example -f infra/compose.yaml --profile identity-test config --quiet
+	docker compose --env-file $(COMPOSE_ENV_FILE) -f infra/compose.yaml --profile identity-test config --quiet
 
 keycloak-reconcile: keycloak-config-check
-	docker compose --env-file infra/.env.example -f infra/compose.yaml run --rm keycloak-config
+	docker compose --env-file $(COMPOSE_ENV_FILE) -f infra/compose.yaml run --rm keycloak-config
 
 keycloak-integration-test: keycloak-config-check
 	./scripts/test-keycloak-reconciliation.sh
