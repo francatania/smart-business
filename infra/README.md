@@ -6,7 +6,7 @@ Docker Compose provisions PostgreSQL, Keycloak, Garage, and Mailpit for local de
 
 ```bash
 make infra-up
-docker compose --env-file infra/.env.example -f infra/compose.yaml ps
+docker compose --env-file infra/.env -f infra/compose.yaml ps
 make infra-logs
 ```
 
@@ -70,7 +70,7 @@ The test-user service refuses every configuration profile except `test`.
 
 ## Environment promotion
 
-- `infra/.env.example` defines safe local-development origins and disposable credentials.
+- `infra/.env.example` is the committed template for safe local-development origins and disposable credentials. `infra/.env` is the ignored per-machine copy consumed by `make` and Docker Compose.
 - `keycloak/environments/test.env.example` overlays isolated CI/test values and is the only profile containing deterministic test identities.
 - `keycloak/environments/deployed.env.example` documents the deployed Keycloak contract. Its `.invalid` hosts and example credentials must be replaced by the deployment platform and secret manager.
 

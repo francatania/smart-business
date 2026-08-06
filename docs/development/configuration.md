@@ -34,7 +34,7 @@ The `deployed` profile intentionally has no confidential defaults. Missing requi
 | `SERVER_PORT`                    | No                     | Platform | Application HTTP port; defaults to `8080`                       |
 | `MANAGEMENT_SERVER_PORT`         | No                     | Platform | Private management port; defaults to `8082`                     |
 
-Garage credentials in `infra/.env.example` are development-only foundations. Shared environments must inject them from a secret manager and rotate them independently.
+Garage credentials in `infra/.env.example` are development-only foundations. `make setup` copies that template to the ignored `infra/.env`, which is the per-machine file consumed by local Docker Compose commands. Shared environments must inject credentials from a secret manager and rotate them independently.
 
 ## Keycloak variables and profiles
 
@@ -56,10 +56,12 @@ profile. The version-controlled reconciler consumes these variables:
 | `ADMIN_BFF_CALLBACK_URI`         | No     | Exact Admin backend callback through `/api`     |
 | `ADMIN_BFF_POST_LOGOUT_URI`      | No     | Configured Admin logout destination             |
 
-Local values live in `infra/.env.example`. Automated identity tests load
-`infra/keycloak/environments/test.env.example` after that base file. Only the test
-overlay defines `KEYCLOAK_TEST_*` identities and credentials; the provisioning
-script refuses to run unless the selected profile is exactly `test`.
+Local values live in the ignored `infra/.env`, created from
+`infra/.env.example`. Automated identity tests deliberately load the committed
+template and `infra/keycloak/environments/test.env.example` to stay
+reproducible. Only the test overlay defines `KEYCLOAK_TEST_*` identities and
+credentials; the provisioning script refuses to run unless the selected profile
+is exactly `test`.
 
 The deployed example is a contract, not deployable credentials. A deployment
 must replace its `.invalid` origins and example credentials through its
@@ -96,7 +98,7 @@ Never place passwords, client secrets, access keys, tokens, or private customer 
 
 ## Local overrides and rotation
 
-- Copy examples only when a tool requires a local file; `.env`, `.env.*`, and `*.local` are ignored except committed examples.
+- `make setup` creates `infra/.env` from its committed example if needed. Put machine-specific port mappings and local overrides only in that ignored file; `.env`, `.env.*`, and `*.local` are ignored except committed examples.
 - Treat all values in `infra/.env.example` as disposable. Never reuse them outside one developer machine.
 - If a real credential is committed or printed, revoke or rotate it first, then remove it from history according to the incident procedure. Deleting the current line is not sufficient.
 - Rotation should overlap old and new credentials only when the provider supports a safe dual-key transition. Record the owner, affected environments, and completion time outside the repository.

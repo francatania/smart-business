@@ -44,13 +44,18 @@ The repository enforces the Node and pnpm versions. `make setup` enables Corepac
 make setup
 ```
 
+`make setup` creates the ignored `infra/.env` from `infra/.env.example` when it
+does not exist. Customize local port mappings and disposable credentials only
+in `infra/.env`; never modify the committed example for machine-specific
+settings.
+
 ## Host-development mode
 
 Start PostgreSQL, Keycloak, Garage, and Mailpit:
 
 ```bash
 make infra-up
-docker compose --env-file infra/.env.example -f infra/compose.yaml ps
+docker compose --env-file infra/.env -f infra/compose.yaml ps
 ```
 
 Wait until all four services report `healthy`. Then use three terminals:
@@ -84,11 +89,11 @@ The management listener is loopback-only in local Compose. A deployed environmen
 Build and run infrastructure, backend, portal, and administration together:
 
 ```bash
-make compose-up
-docker compose --env-file infra/.env.example -f infra/compose.yaml --profile applications ps
+make app-up
+docker compose --env-file infra/.env -f infra/compose.yaml --profile applications ps
 ```
 
-`make compose-up` waits for dependencies through health checks but returns before the frontend health checks necessarily change from `starting` to `healthy`. Re-run the `ps` command after a few seconds if needed.
+`make app-up` waits for dependencies through health checks but returns before the frontend health checks necessarily change from `starting` to `healthy`. Re-run the `ps` command after a few seconds if needed. `make compose-up` remains available as an alias.
 
 Stop containers while preserving local data:
 
