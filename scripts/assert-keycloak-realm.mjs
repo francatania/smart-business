@@ -126,6 +126,23 @@ for (const expected of expectedClients) {
   invariant(secret.value === expected.secret, `${expected.clientId} secret was not reconciled.`);
 }
 
+const identityProviders = await adminRequest('/identity-provider/instances');
+const google = identityProviders.find(({ alias }) => alias === 'google');
+if (process.env.KEYCLOAK_EXPECT_GOOGLE === 'true') {
+  invariant(google, 'Google identity provider is missing.');
+  invariant(google.providerId === 'google', 'Google uses an unexpected Keycloak provider.');
+  invariant(google.enabled === true, 'Google identity provider is disabled.');
+  invariant(google.linkOnly === false, 'Google identity provider is link-only.');
+  invariant(google.trustEmail === true, 'Google identity provider does not trust verified email.');
+  invariant(google.storeToken === false, 'Google access tokens must not be stored.');
+  invariant(google.config.syncMode === 'IMPORT', 'Google synchronization mode is unexpected.');
+  invariant(google.config.defaultScope === 'openid profile email', 'Google scopes are unexpected.');
+  invariant(google.config.clientId === process.env.GOOGLE_OAUTH_CLIENT_ID, 'Google client ID differs from the configured value.');
+  invariant(google.config.clientSecret, 'Google client secret is missing.');
+} else {
+  invariant(!google, 'Google identity provider must remain absent without credentials.');
+}
+
 if (process.env.KEYCLOAK_EXPECT_TEST_USERS === 'true') {
   for (const variable of ['KEYCLOAK_TEST_CUSTOMER_USERNAME', 'KEYCLOAK_TEST_ADMIN_USERNAME']) {
     const username = process.env[variable];

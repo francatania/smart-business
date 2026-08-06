@@ -78,7 +78,7 @@ The Vite servers proxy same-origin `/api` requests to the backend. The applicati
 | Backend liveness   | `http://localhost:8082/actuator/health/liveness`     |
 | Backend readiness  | `http://localhost:8082/actuator/health/readiness`    |
 | Prometheus metrics | `http://localhost:8082/actuator/prometheus`          |
-| Keycloak           | `http://auth.localhost:8081`                         |
+| Keycloak           | `http://localhost:8081`                              |
 | Garage S3          | `http://localhost:3900`                              |
 | Mailpit            | `http://localhost:8025`                              |
 

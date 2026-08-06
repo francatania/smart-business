@@ -135,6 +135,27 @@ The MVP does not include a Smart Business password, email magic link, email one-
 
 Google authentication requests only the identity information needed for sign-in. Access to unrelated Google APIs is not required.
 
+Google is configured as a Keycloak identity provider, not as a browser-side
+integration. Keycloak stores the Google client credentials and brokers the
+external sign-in; Portal and Administration receive only the normal Keycloak
+OIDC result through their BFF flows. Google is enabled only when both local or
+deployed OAuth credentials are supplied. The configured scopes are exactly
+`openid`, `profile`, and `email`; Google access tokens are not retained by
+Keycloak.
+
+Google Cloud's development test-user allowlist is not a Smart Business access
+control. It only constrains a Google OAuth project while it is in testing;
+production identity authentication may serve any eligible Google account.
+Organization memberships and backend capabilities, rather than an upstream
+identity-provider allowlist, determine which business data an authenticated
+user may access.
+
+For local Google testing, Google's redirect-URI rules require the broker to be
+available at `http://localhost:<keycloak-port>`, rather than a `.localhost`
+subdomain. The browser uses that public Keycloak origin, while the Dockerized
+backend uses explicit internal token and JWK endpoints only in the local
+profile. Shared environments use HTTPS and normal issuer discovery.
+
 ### Implicit local account creation
 
 After successful Keycloak authentication:

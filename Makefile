@@ -2,7 +2,7 @@
 
 COMPOSE_ENV_FILE ?= infra/.env
 
-.PHONY: help setup local-config infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev api-generate format test test-fast test-integration e2e verify verify-clean-checkout app-up compose-up secrets-check configuration-check security-check keycloak-config-check keycloak-reconcile keycloak-integration-test
+.PHONY: help setup local-config infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev api-generate format test test-fast test-integration e2e verify verify-clean-checkout app-up app-down compose-up secrets-check configuration-check security-check keycloak-config-check keycloak-reconcile keycloak-google-check keycloak-integration-test
 
 help:
 	@echo "Smart Business development commands"
@@ -13,12 +13,14 @@ help:
 	@echo "  make backend-run    Run the Spring Boot backend on the host"
 	@echo "  make portal-dev     Run the portal development server"
 	@echo "  make admin-dev      Run the administration development server"
-	@echo "  make app-up         Start infrastructure and application containers"
+	@echo "  make app-up         Build and start the complete application stack"
+	@echo "  make app-down       Stop and remove the complete application stack"
 	@echo "  make compose-up     Alias for make app-up"
 	@echo "  make api-generate   Regenerate the OpenAPI TypeScript client"
 	@echo "  make secrets-check  Scan for representative committed-secret patterns"
 	@echo "  make keycloak-config-check Validate canonical and environment Keycloak settings"
 	@echo "  make keycloak-reconcile Reapply local Keycloak realm and BFF client settings"
+	@echo "  make keycloak-google-check Verify the configured local Google identity provider"
 	@echo "  make keycloak-integration-test Test reconciliation against isolated Keycloak"
 	@echo "  make security-check Run Git-history and dependency vulnerability scans"
 	@echo "  make format         Format supported repository files"
@@ -64,6 +66,9 @@ admin-dev:
 app-up: local-config
 	docker compose --env-file $(COMPOSE_ENV_FILE) -f infra/compose.yaml --profile applications up -d --build
 
+app-down: local-config
+	docker compose --env-file $(COMPOSE_ENV_FILE) -f infra/compose.yaml --profile applications down
+
 compose-up: app-up
 
 api-generate:
@@ -83,6 +88,9 @@ keycloak-config-check: local-config
 
 keycloak-reconcile: keycloak-config-check
 	docker compose --env-file $(COMPOSE_ENV_FILE) -f infra/compose.yaml run --rm keycloak-config
+
+keycloak-google-check: local-config
+	set -a; . "$(COMPOSE_ENV_FILE)"; set +a; KEYCLOAK_ASSERT_URL="$$KEYCLOAK_PUBLIC_URL" KEYCLOAK_EXPECT_GOOGLE=true node scripts/assert-keycloak-realm.mjs
 
 keycloak-integration-test: keycloak-config-check
 	./scripts/test-keycloak-reconciliation.sh

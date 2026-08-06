@@ -152,6 +152,50 @@ upsert_client() {
     >/dev/null
 }
 
+reconcile_google_identity_provider() {
+  local client_id="${GOOGLE_OAUTH_CLIENT_ID:-}"
+  local client_secret="${GOOGLE_OAUTH_CLIENT_SECRET:-}"
+  local resource
+  local operation
+
+  if [[ -z "$client_id" && -z "$client_secret" ]]; then
+    echo 'Google identity brokering is not configured for this environment.'
+    return
+  fi
+  if [[ -z "$client_id" || -z "$client_secret" ]]; then
+    echo 'Google identity brokering requires both GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET.' >&2
+    exit 1
+  fi
+
+  if "$kcadm" get identity-provider/instances/google -r "$realm" >/dev/null 2>&1; then
+    operation='update'
+    resource='identity-provider/instances/google'
+  else
+    operation='create'
+    resource='identity-provider/instances'
+  fi
+
+  "$kcadm" "$operation" "$resource" -r "$realm" \
+    -s alias=google \
+    -s 'displayName=Continue with Google' \
+    -s providerId=google \
+    -s enabled=true \
+    -s linkOnly=false \
+    -s trustEmail=true \
+    -s storeToken=false \
+    -s addReadTokenRoleOnCreate=false \
+    -s 'firstBrokerLoginFlowAlias=first broker login' \
+    -s 'config.syncMode=IMPORT' \
+    -s 'config.defaultScope=openid profile email' \
+    -s 'config.useJwksUrl=true' \
+    -s 'config.guiOrder=1' \
+    -s "config.clientId=$client_id" \
+    -s "config.clientSecret=$client_secret" \
+    >/dev/null
+
+  echo 'Google identity brokering was reconciled.'
+}
+
 authenticate
 
 if ! "$kcadm" get "realms/$realm" >/dev/null 2>&1; then
@@ -181,5 +225,7 @@ upsert_client \
 upsert_client \
   admin-bff 'Administration BFF' "$ADMIN_BFF_CLIENT_SECRET" \
   "$ADMIN_BFF_ORIGIN" "$ADMIN_BFF_CALLBACK_URI" "$ADMIN_BFF_POST_LOGOUT_URI"
+
+reconcile_google_identity_provider
 
 echo "Keycloak realm reconciliation completed for profile $KEYCLOAK_CONFIGURATION_PROFILE."

@@ -3,7 +3,10 @@ smart-business:
   public-base-url: ${SMART_BUSINESS_PUBLIC_BASE_URL:http://localhost:5173}
   identity:
     oidc:
-      issuer-uri: ${OIDC_ISSUER_URI:http://auth.localhost:8081/realms/smart-business}
+      issuer-uri: ${OIDC_ISSUER_URI:http://localhost:8081/realms/smart-business}
+      authorization-uri: ${OIDC_AUTHORIZATION_URI:http://localhost:8081/realms/smart-business/protocol/openid-connect/auth}
+      token-uri: ${OIDC_TOKEN_URI:http://localhost:8081/realms/smart-business/protocol/openid-connect/token}
+      jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8081/realms/smart-business/protocol/openid-connect/certs}
       portal-client-secret: ${PORTAL_BFF_CLIENT_SECRET:local-portal-bff-secret}
       portal-callback-uri: ${PORTAL_BFF_CALLBACK_URI:http://portal.localhost:5173/api/auth/callback/portal-bff}
       admin-client-secret: ${ADMIN_BFF_CLIENT_SECRET:local-admin-bff-secret}
@@ -17,3 +20,13 @@ spring:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/smart_business?currentSchema=smart_business}
     username: ${DATABASE_USERNAME:smart_business_app}
     password: ${DATABASE_PASSWORD:local-smart-business-app}
+
+server:
+  servlet:
+    session:
+      cookie:
+        name: SBSESSION
+        path: /
+        http-only: true
+        same-site: lax
+        secure: false

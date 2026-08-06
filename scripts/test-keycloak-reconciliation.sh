@@ -44,12 +44,14 @@ node "$repository_root/scripts/validate-keycloak-config.mjs"
 "${compose[@]}" run --rm keycloak-config
 
 KEYCLOAK_ASSERT_URL="http://127.0.0.1:$KEYCLOAK_PORT" \
+  KEYCLOAK_EXPECT_GOOGLE=false \
   node "$repository_root/scripts/assert-keycloak-realm.mjs"
 
 "${compose[@]}" --profile identity-test run --rm --no-deps keycloak-test-users
 "${compose[@]}" --profile identity-test run --rm --no-deps keycloak-test-users
 KEYCLOAK_ASSERT_URL="http://127.0.0.1:$KEYCLOAK_PORT" \
   KEYCLOAK_EXPECT_TEST_USERS=true \
+  KEYCLOAK_EXPECT_GOOGLE=false \
   node "$repository_root/scripts/assert-keycloak-realm.mjs"
 
 # A server restart and another reconciliation must preserve test identities.
@@ -58,6 +60,7 @@ KEYCLOAK_ASSERT_URL="http://127.0.0.1:$KEYCLOAK_PORT" \
 "${compose[@]}" run --rm keycloak-config
 KEYCLOAK_ASSERT_URL="http://127.0.0.1:$KEYCLOAK_PORT" \
   KEYCLOAK_EXPECT_TEST_USERS=true \
+  KEYCLOAK_EXPECT_GOOGLE=false \
   node "$repository_root/scripts/assert-keycloak-realm.mjs"
 
 if "${compose[@]}" --profile identity-test run --rm --no-deps \
