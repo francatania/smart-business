@@ -137,7 +137,10 @@ if (process.env.KEYCLOAK_EXPECT_GOOGLE === 'true') {
   invariant(google.storeToken === false, 'Google access tokens must not be stored.');
   invariant(google.config.syncMode === 'IMPORT', 'Google synchronization mode is unexpected.');
   invariant(google.config.defaultScope === 'openid profile email', 'Google scopes are unexpected.');
-  invariant(google.config.clientId === process.env.GOOGLE_OAUTH_CLIENT_ID, 'Google client ID differs from the configured value.');
+  invariant(
+    google.config.clientId === process.env.GOOGLE_OAUTH_CLIENT_ID,
+    'Google client ID differs from the configured value.',
+  );
   invariant(google.config.clientSecret, 'Google client secret is missing.');
 } else {
   invariant(!google, 'Google identity provider must remain absent without credentials.');

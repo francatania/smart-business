@@ -89,7 +89,10 @@ export function validateCanonicalConfiguration(candidate = configuration) {
     'Google must only be enabled when both OAuth credentials are configured.',
   );
   invariant(google.linkOnly === false, 'Google must be available on the login page.');
-  invariant(google.trustEmail === true, 'Google email claims must be trusted after provider verification.');
+  invariant(
+    google.trustEmail === true,
+    'Google email claims must be trusted after provider verification.',
+  );
   invariant(google.storeToken === false, 'Google access tokens must not be stored in Keycloak.');
   invariant(google.syncMode === 'IMPORT', 'Google identities must use import synchronization.');
   exactKeys(google.scopes, ['openid', 'profile', 'email'], 'Google identity scopes');
