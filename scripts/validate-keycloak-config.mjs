@@ -76,6 +76,26 @@ export function validateCanonicalConfiguration(candidate = configuration) {
       `${client.clientId} must use its exact backend callback path.`,
     );
   }
+
+  exactKeys(
+    candidate.identityProviders.map(({ alias }) => alias),
+    ['google'],
+    'Identity providers',
+  );
+  const [google] = candidate.identityProviders;
+  invariant(google.providerId === 'google', 'Google must use the Keycloak Google provider.');
+  invariant(
+    google.enabledWhenConfigured === true,
+    'Google must only be enabled when both OAuth credentials are configured.',
+  );
+  invariant(google.linkOnly === false, 'Google must be available on the login page.');
+  invariant(
+    google.trustEmail === true,
+    'Google email claims must be trusted after provider verification.',
+  );
+  invariant(google.storeToken === false, 'Google access tokens must not be stored in Keycloak.');
+  invariant(google.syncMode === 'IMPORT', 'Google identities must use import synchronization.');
+  exactKeys(google.scopes, ['openid', 'profile', 'email'], 'Google identity scopes');
 }
 
 const unsafeValue = /(\$\{|\{\{|<[^>]+>|\*|\b(?:CHANGE_ME|REPLACE_ME|TODO)\b)/iu;
@@ -150,10 +170,17 @@ export function validateEnvironment(values, expectedProfile, label) {
     expectedProfile,
   );
   invariant(keycloakUrl.pathname === '/', `${label} KEYCLOAK_PUBLIC_URL must be an origin.`);
-  invariant(
-    values.KEYCLOAK_NETWORK_ALIAS === keycloakUrl.hostname,
-    `${label} KEYCLOAK_NETWORK_ALIAS must match the public Keycloak hostname.`,
-  );
+  if (expectedProfile === 'local' && keycloakUrl.hostname === 'localhost') {
+    invariant(
+      values.KEYCLOAK_NETWORK_ALIAS === 'auth.localhost',
+      `${label} KEYCLOAK_NETWORK_ALIAS must retain the internal auth.localhost alias.`,
+    );
+  } else {
+    invariant(
+      values.KEYCLOAK_NETWORK_ALIAS === keycloakUrl.hostname,
+      `${label} KEYCLOAK_NETWORK_ALIAS must match the public Keycloak hostname.`,
+    );
+  }
   const issuerUrl = validateUrl(values.OIDC_ISSUER_URI, 'OIDC_ISSUER_URI', expectedProfile);
   invariant(
     issuerUrl.origin === keycloakUrl.origin && issuerUrl.pathname === '/realms/smart-business',

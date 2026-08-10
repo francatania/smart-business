@@ -84,6 +84,18 @@ const unsafeCanonicalConfiguration = {
       bearerOnly: false,
     },
   ],
+  identityProviders: [
+    {
+      alias: 'google',
+      providerId: 'google',
+      enabledWhenConfigured: true,
+      linkOnly: false,
+      trustEmail: true,
+      storeToken: false,
+      syncMode: 'IMPORT',
+      scopes: ['openid', 'profile', 'email'],
+    },
+  ],
 };
 expectFailure('direct-access grant', () =>
   validateCanonicalConfiguration(unsafeCanonicalConfiguration),

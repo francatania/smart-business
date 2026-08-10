@@ -41,20 +41,22 @@ Garage credentials in `infra/.env.example` are development-only foundations. `ma
 Keycloak configuration uses an independent `local`, `test`, or `deployed`
 profile. The version-controlled reconciler consumes these variables:
 
-| Variable                         | Secret | Description                                     |
-| -------------------------------- | ------ | ----------------------------------------------- |
-| `KEYCLOAK_CONFIGURATION_PROFILE` | No     | Safety boundary: `local`, `test`, or `deployed` |
-| `KEYCLOAK_PUBLIC_URL`            | No     | Exact public issuer origin                      |
-| `KEYCLOAK_ADMIN_USER`            | No     | Administrative reconciliation username          |
-| `KEYCLOAK_ADMIN_PASSWORD`        | Yes    | Administrative reconciliation credential        |
-| `PORTAL_BFF_CLIENT_SECRET`       | Yes    | Confidential Portal OIDC client credential      |
-| `PORTAL_BFF_ORIGIN`              | No     | Exact Portal application origin                 |
-| `PORTAL_BFF_CALLBACK_URI`        | No     | Exact Portal backend callback through `/api`    |
-| `PORTAL_BFF_POST_LOGOUT_URI`     | No     | Configured Portal logout destination            |
-| `ADMIN_BFF_CLIENT_SECRET`        | Yes    | Confidential Admin OIDC client credential       |
-| `ADMIN_BFF_ORIGIN`               | No     | Exact Admin application origin                  |
-| `ADMIN_BFF_CALLBACK_URI`         | No     | Exact Admin backend callback through `/api`     |
-| `ADMIN_BFF_POST_LOGOUT_URI`      | No     | Configured Admin logout destination             |
+| Variable                         | Secret | Description                                                          |
+| -------------------------------- | ------ | -------------------------------------------------------------------- |
+| `KEYCLOAK_CONFIGURATION_PROFILE` | No     | Safety boundary: `local`, `test`, or `deployed`                      |
+| `KEYCLOAK_PUBLIC_URL`            | No     | Exact public issuer origin                                           |
+| `KEYCLOAK_ADMIN_USER`            | No     | Administrative reconciliation username                               |
+| `KEYCLOAK_ADMIN_PASSWORD`        | Yes    | Administrative reconciliation credential                             |
+| `PORTAL_BFF_CLIENT_SECRET`       | Yes    | Confidential Portal OIDC client credential                           |
+| `PORTAL_BFF_ORIGIN`              | No     | Exact Portal application origin                                      |
+| `PORTAL_BFF_CALLBACK_URI`        | No     | Exact Portal backend callback through `/api`                         |
+| `PORTAL_BFF_POST_LOGOUT_URI`     | No     | Configured Portal logout destination                                 |
+| `ADMIN_BFF_CLIENT_SECRET`        | Yes    | Confidential Admin OIDC client credential                            |
+| `ADMIN_BFF_ORIGIN`               | No     | Exact Admin application origin                                       |
+| `ADMIN_BFF_CALLBACK_URI`         | No     | Exact Admin backend callback through `/api`                          |
+| `ADMIN_BFF_POST_LOGOUT_URI`      | No     | Configured Admin logout destination                                  |
+| `GOOGLE_OAUTH_CLIENT_ID`         | No     | Google OAuth web-client identifier; enable only with its secret      |
+| `GOOGLE_OAUTH_CLIENT_SECRET`     | Yes    | Google OAuth web-client secret; never commit or expose to a frontend |
 
 Local values live in the ignored `infra/.env`, created from
 `infra/.env.example`. Automated identity tests deliberately load the committed
@@ -73,13 +75,38 @@ Client secrets are reconciled to Keycloak but never embedded in frontend code,
 stored in the canonical JSON, or printed by the live assertion. Rotate each BFF
 secret independently, update the matching backend OIDC registration in the same
 deployment, run the reconciler, and verify login before retiring the old
-deployment configuration.
+deployment configuration. Google brokering is disabled when both Google values
+are absent and fails closed when only one value is supplied.
 
 The backend normally derives authorization, token, and JWK endpoints from
 `OIDC_ISSUER_URI`. `OIDC_AUTHORIZATION_URI`, `OIDC_TOKEN_URI`, and
-`OIDC_JWK_SET_URI` are a test-only, all-or-nothing override used to keep Spring
-context tests independent from a running identity provider. Shared deployments
-must rely on issuer discovery and must not define these overrides.
+`OIDC_JWK_SET_URI` are an all-or-nothing override used by tests and local Google
+brokering. The local browser reaches Keycloak at `localhost`, while the
+containerized backend uses Keycloak's private Docker endpoint for token and JWK
+requests. Shared deployments must rely on issuer discovery and must not define
+these overrides.
+
+To create local Google credentials, register this exact redirect URI in Google
+Cloud after choosing a Web application client:
+
+```text
+http://localhost:8081/realms/smart-business/broker/google/endpoint
+```
+
+Replace `8081` with the local `KEYCLOAK_PORT` if it differs. The callback is
+between Google and Keycloak, not Google and the Portal. Production uses a
+separate client with the final HTTPS Keycloak origin.
+
+After the local stack is running, `make keycloak-google-check` confirms the
+provider's safe configuration without printing the Google client secret. A real
+browser sign-in remains the required end-to-end validation. Start that flow
+from a browser session without existing Portal and Keycloak cookies when testing
+the first-login path. The local BFF session is an explicit host-only
+`SBSESSION` cookie with `Path=/`, `HttpOnly`, and `SameSite=Lax`; it retains
+the server-side OIDC state and PKCE verifier through the Keycloak round trip.
+Diagnostic logs contain only a correlation ID, OIDC error code, and a one-way
+subject fingerprint. They never contain an email address, authorization code,
+token, session cookie, or client secret.
 
 Callback values must be absolute HTTP(S) URLs with the exact paths
 `/api/auth/callback/portal-bff` and `/api/auth/callback/admin-bff`. The deployed

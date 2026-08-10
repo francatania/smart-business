@@ -2,6 +2,8 @@ package com.smartbusiness;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +14,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.session.ChangeSessionIdAuthenticationStrategy;
@@ -21,6 +24,8 @@ import tools.jackson.databind.ObjectMapper;
 
 @Configuration(proxyBeanMethods = false)
 class SecurityConfiguration {
+
+    private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
 
     @Bean
     OAuth2AuthorizedClientRepository authorizedClientRepository() {
@@ -60,14 +65,21 @@ class SecurityConfiguration {
                 .oauth2Login(oauth -> oauth.authorizedClientRepository(authorizedClientRepository)
                         .redirectionEndpoint(endpoint -> endpoint.baseUri("/api/auth/callback/*"))
                         .successHandler(authenticationSuccessHandler)
-                        .failureHandler((request, response, exception) -> writeProblem(
-                                objectMapper,
-                                response,
-                                ApiProblemDetails.create(
-                                        HttpStatus.UNAUTHORIZED,
-                                        "authentication_failed",
-                                        "Authentication could not be completed.",
-                                        request))))
+                        .failureHandler((request, response, exception) -> {
+                            logger.warn(
+                                    "OIDC callback failed exceptionType={} errorCode={} correlationId={}",
+                                    exception.getClass().getName(),
+                                    oidcErrorCode(exception),
+                                    ApiProblemDetails.correlationId(request));
+                            writeProblem(
+                                    objectMapper,
+                                    response,
+                                    ApiProblemDetails.create(
+                                            HttpStatus.UNAUTHORIZED,
+                                            "authentication_failed",
+                                            "Authentication could not be completed.",
+                                            request));
+                        }))
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, exception) -> writeProblem(
                                 objectMapper,
@@ -93,5 +105,11 @@ class SecurityConfiguration {
         response.setStatus(problem.getStatus());
         response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
         objectMapper.writeValue(response.getOutputStream(), problem);
+    }
+
+    private String oidcErrorCode(Exception exception) {
+        return exception instanceof OAuth2AuthenticationException oauthException
+                ? oauthException.getError().getErrorCode()
+                : "unavailable";
     }
 }
