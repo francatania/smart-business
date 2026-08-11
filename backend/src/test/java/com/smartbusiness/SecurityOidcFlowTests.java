@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -14,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.smartbusiness.identity.AuthLoginController;
 import com.smartbusiness.identity.AuthReturnTargets;
+import com.smartbusiness.identity.CsrfController;
 import com.smartbusiness.identity.OidcAuthenticationSuccessHandler;
 import com.smartbusiness.identity.api.AuthenticatedIdentity;
 import com.smartbusiness.identity.api.PlatformIdentity;
@@ -44,7 +47,12 @@ import org.springframework.security.web.authentication.session.SessionAuthentica
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(
-        controllers = {SystemInfoController.class, AuthLoginController.class, SecurityTestEndpoints.class},
+        controllers = {
+            SystemInfoController.class,
+            AuthLoginController.class,
+            CsrfController.class,
+            SecurityTestEndpoints.class
+        },
         properties = {"info.application.name=smart-business", "info.application.version=test"})
 @Import({
     SecurityConfiguration.class,
@@ -89,6 +97,28 @@ class SecurityOidcFlowTests {
         mockMvc.perform(get("/api/private/test").with(oidcLogin().clientRegistration(portal)))
                 .andExpect(status().isOk())
                 .andExpect(content().string("private"));
+    }
+
+    @Test
+    void requiresASessionBackedCsrfTokenForStateChangingRequests() throws Exception {
+        var bootstrap = mockMvc.perform(get("/api/auth/csrf"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"))
+                .andExpect(jsonPath("$.headerName").value("X-CSRF-TOKEN"))
+                .andExpect(jsonPath("$.parameterName").value("_csrf"))
+                .andReturn();
+        var session = (MockHttpSession) bootstrap.getRequest().getSession(false);
+        assertThat(session).isNotNull();
+        mockMvc.perform(post("/api/private/test").with(oidcLogin()).session(session))
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.code").value("access_denied"));
+        mockMvc.perform(post("/api/private/test")
+                        .with(oidcLogin())
+                        .session(session)
+                        .with(csrf().asHeader()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("updated"));
     }
 
     @Test

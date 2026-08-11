@@ -10,8 +10,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -19,6 +19,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.session.ChangeSessionIdAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import tools.jackson.databind.ObjectMapper;
 
@@ -38,11 +41,21 @@ class SecurityConfiguration {
     }
 
     @Bean
+    CsrfTokenRepository csrfTokenRepository() {
+        var repository = new HttpSessionCsrfTokenRepository();
+        repository.setHeaderName("X-CSRF-TOKEN");
+        repository.setParameterName("_csrf");
+        return repository;
+    }
+
+    @Bean
     SecurityFilterChain applicationSecurity(
             HttpSecurity http,
             ObjectMapper objectMapper,
             OAuth2AuthorizedClientRepository authorizedClientRepository,
             SessionAuthenticationStrategy sessionAuthenticationStrategy,
+            CsrfTokenRepository csrfTokenRepository,
+            AbsoluteSessionTimeoutFilter absoluteSessionTimeoutFilter,
             @Qualifier("oidcAuthenticationSuccessHandler") AuthenticationSuccessHandler authenticationSuccessHandler)
             throws Exception {
         return http.authorizeHttpRequests(authorize -> authorize
@@ -50,6 +63,7 @@ class SecurityConfiguration {
                                 "/api/system/info",
                                 "/api/public/**",
                                 "/api/auth/login/**",
+                                "/api/auth/csrf",
                                 "/oauth2/authorization/**",
                                 "/api/auth/callback/**",
                                 "/v3/api-docs/**",
@@ -59,9 +73,11 @@ class SecurityConfiguration {
                         .permitAll()
                         .anyRequest()
                         .authenticated())
-                .csrf(Customizer.withDefaults())
+                .csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository))
+                .cors(AbstractHttpConfigurer::disable)
                 .requestCache(cache -> cache.requestCache(new NullRequestCache()))
                 .sessionManagement(session -> session.sessionAuthenticationStrategy(sessionAuthenticationStrategy))
+                .addFilterBefore(absoluteSessionTimeoutFilter, SecurityContextHolderFilter.class)
                 .oauth2Login(oauth -> oauth.authorizedClientRepository(authorizedClientRepository)
                         .redirectionEndpoint(endpoint -> endpoint.baseUri("/api/auth/callback/*"))
                         .successHandler(authenticationSuccessHandler)

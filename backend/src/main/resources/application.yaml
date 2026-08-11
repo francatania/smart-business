@@ -24,12 +24,16 @@ spring:
     problemdetails:
       enabled: true
   session:
+    timeout: ${SMART_BUSINESS_SESSION_IDLE_TIMEOUT:30d}
     jdbc:
       initialize-schema: never
 
 server:
   port: ${SERVER_PORT:8080}
   shutdown: graceful
+  servlet:
+    session:
+      timeout: ${SMART_BUSINESS_SESSION_IDLE_TIMEOUT:30d}
 
 management:
   server:
@@ -59,3 +63,7 @@ info:
   application:
     name: ${spring.application.name}
     version: '@project.version@'
+
+smart-business:
+  session:
+    absolute-timeout: ${SMART_BUSINESS_SESSION_ABSOLUTE_TIMEOUT:90d}
