@@ -120,6 +120,25 @@ routes, API documentation, and management endpoints are explicitly public.
 Unauthenticated API access returns `application/problem+json` rather than an
 HTML login redirect.
 
+### Application session and CSRF protection
+
+Spring Session JDBC persists the BFF session in PostgreSQL. Sessions expire
+after 30 days of inactivity and are invalidated after 90 days from creation,
+even when they remain active. Authentication changes the session identifier to
+prevent session fixation.
+
+The local profile uses the host-only `SBSESSION` cookie so HTTP development on
+`*.localhost` remains possible. The deployed profile uses `__Host-SBSESSION`:
+`Secure`, `HttpOnly`, `SameSite=Lax`, `Path=/`, and no `Domain` attribute. The
+browser cannot read either cookie and the cookie never contains OIDC tokens.
+
+React obtains a session-backed CSRF token from `GET /api/auth/csrf` before its
+first state-changing request. The response is `Cache-Control: no-store` and
+contains the token plus the `X-CSRF-TOKEN` header and `_csrf` parameter names.
+The token is kept only in frontend memory and is sent on unsafe same-origin
+requests. CORS is disabled by default: Portal and Administration access their
+own `/api` reverse-proxy path rather than making cross-origin browser calls.
+
 ## Customer Authentication
 
 ### First booking

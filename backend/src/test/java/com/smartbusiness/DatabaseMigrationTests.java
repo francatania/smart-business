@@ -3,6 +3,7 @@ package com.smartbusiness;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import java.time.Duration;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.session.Session;
+import org.springframework.session.SessionRepository;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -49,6 +52,10 @@ class DatabaseMigrationTests {
     @Autowired
     private MeterRegistry meterRegistry;
 
+    @Autowired
+    @SuppressWarnings("rawtypes")
+    private SessionRepository sessionRepository;
+
     @Test
     void migratesAndValidatesTheSchemaRepeatedly() {
         flyway.validate();
@@ -73,5 +80,20 @@ class DatabaseMigrationTests {
         assertThat(meterRegistry.find("jvm.memory.used").meter()).isNotNull();
         assertThat(meterRegistry.find("jdbc.connections.max").meter()).isNotNull();
         assertThat(meterRegistry.find("hikaricp.connections").meter()).isNotNull();
+    }
+
+    @Test
+    void persistsSessionStateInPostgresqlForAnotherBackendInstanceToRead() {
+        Session session = sessionRepository.createSession();
+        session.setAttribute("authenticated-user", "platform-user-id");
+        sessionRepository.save(session);
+
+        var restored = sessionRepository.findById(session.getId());
+
+        assertThat(restored).isNotNull();
+        assertThat((String) restored.getAttribute("authenticated-user")).isEqualTo("platform-user-id");
+        assertThat(restored.getMaxInactiveInterval()).isEqualTo(Duration.ofDays(30));
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM spring_session", Integer.class))
+                .isEqualTo(1);
     }
 }

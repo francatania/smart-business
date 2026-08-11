@@ -27,6 +27,16 @@ springdoc:
   api-docs:
     enabled: false
 
+server:
+  servlet:
+    session:
+      cookie:
+        name: __Host-SBSESSION
+        path: /
+        http-only: true
+        same-site: lax
+        secure: true
+
 logging:
   structured:
     format:
