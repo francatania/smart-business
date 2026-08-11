@@ -9,6 +9,49 @@
         },
         "type": "object"
       },
+      "CurrentActor": {
+        "properties": {
+          "absoluteExpiresAt": { "format": "date-time", "type": "string" },
+          "assuranceLevel": { "minLength": 1, "type": "string" },
+          "authenticatedAt": { "format": "date-time", "type": "string" },
+          "displayName": { "minLength": 1, "type": "string" },
+          "globalRoles": { "items": { "type": "string" }, "type": "array" },
+          "id": { "format": "uuid", "type": "string" },
+          "organizationAccess": {
+            "items": { "$ref": "#/components/schemas/OrganizationAccess" },
+            "type": "array"
+          },
+          "status": { "enum": ["ACTIVE", "DISABLED"], "type": "string" },
+          "verifiedEmail": { "type": "string" }
+        },
+        "required": [
+          "absoluteExpiresAt",
+          "assuranceLevel",
+          "authenticatedAt",
+          "displayName",
+          "globalRoles",
+          "id",
+          "organizationAccess",
+          "status"
+        ],
+        "type": "object"
+      },
+      "OrganizationAccess": {
+        "properties": {
+          "capabilities": { "items": { "type": "string" }, "type": "array" },
+          "organizationId": { "format": "uuid", "type": "string" }
+        },
+        "required": ["capabilities", "organizationId"],
+        "type": "object"
+      },
+      "SessionResponse": {
+        "properties": {
+          "actor": { "$ref": "#/components/schemas/CurrentActor" },
+          "authenticated": { "type": "boolean" }
+        },
+        "required": ["authenticated"],
+        "type": "object"
+      },
       "SystemInfo": {
         "properties": {
           "name": { "type": "string" },
@@ -68,6 +111,22 @@
         },
         "summary": "Start the Portal or Administration OIDC login flow",
         "tags": ["auth-login-controller"]
+      }
+    },
+    "/auth/session": {
+      "get": {
+        "operationId": "session",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/SessionResponse" }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": ["session-controller"]
       }
     },
     "/system/info": {

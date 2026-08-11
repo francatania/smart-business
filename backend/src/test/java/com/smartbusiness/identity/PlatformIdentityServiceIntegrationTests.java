@@ -76,6 +76,16 @@ class PlatformIdentityServiceIntegrationTests {
     }
 
     @Test
+    void findsThePersistedPlatformIdentityByIssuerAndSubject() {
+        var source = identity("subject-session", "Session user", "session@example.test");
+        var resolved = identities.resolve(source);
+
+        var found = identities.findByExternalIdentity(source.issuer(), source.subject());
+
+        assertThat(found).contains(resolved);
+    }
+
+    @Test
     void concurrentFirstLoginsResolveToOnePlatformUser() throws Exception {
         var workers = 8;
         var start = new CountDownLatch(1);

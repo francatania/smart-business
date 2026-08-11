@@ -1,5 +1,6 @@
 package com.smartbusiness;
 
+import com.smartbusiness.identity.SessionSecurityProperties;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

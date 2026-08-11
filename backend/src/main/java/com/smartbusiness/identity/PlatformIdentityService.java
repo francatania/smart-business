@@ -57,6 +57,14 @@ class PlatformIdentityService implements PlatformIdentityDirectory {
         return platformUsers.findById(userId).map(PlatformUserEntity::toApi);
     }
 
+    @Override
+    public Optional<PlatformIdentity> findByExternalIdentity(java.net.URI issuer, String subject) {
+        return externalIdentities
+                .findByIssuerAndSubject(issuer.toString(), subject)
+                .map(ExternalIdentityEntity::platformUser)
+                .map(PlatformUserEntity::toApi);
+    }
+
     private PlatformIdentity resolveInTransaction(AuthenticatedIdentity identity) {
         var now = Instant.now(clock);
         var externalIdentity =

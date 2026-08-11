@@ -1,4 +1,4 @@
-package com.smartbusiness;
+package com.smartbusiness.identity;
 
 import jakarta.validation.constraints.NotNull;
 import java.time.Duration;

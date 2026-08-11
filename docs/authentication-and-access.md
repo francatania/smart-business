@@ -139,6 +139,24 @@ The token is kept only in frontend memory and is sent on unsafe same-origin
 requests. CORS is disabled by default: Portal and Administration access their
 own `/api` reverse-proxy path rather than making cross-origin browser calls.
 
+### Session discovery and authorization context
+
+`GET /api/auth/session` is the cache-safe, non-redirecting way for browser
+applications to discover the current application session. An anonymous response
+contains only `authenticated: false`. An authenticated response includes the
+stable platform-user ID, lifecycle status, safe display fields, allowlisted
+global roles, authentication timestamps, and an assurance level. It never
+includes OIDC provider data, access tokens, refresh tokens, ID tokens, or
+session identifiers.
+
+The only currently mapped Keycloak role is the stable platform-wide
+`platform_admin` role. The backend ignores organization IDs, organization roles,
+and arbitrary privileges in OIDC claims. Organization access is resolved through
+a backend capability resolver and returns an empty list until the Organizations
+epic provides active memberships and server-calculated capabilities. An OIDC
+session without an active persisted platform user is denied access to protected
+APIs by default.
+
 ## Customer Authentication
 
 ### First booking

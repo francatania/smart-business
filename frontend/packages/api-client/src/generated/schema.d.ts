@@ -37,6 +37,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/auth/session': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['session'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/system/info': {
     parameters: {
       query?: never;
@@ -62,6 +78,30 @@ export interface components {
       headerName?: string;
       parameterName?: string;
       token?: string;
+    };
+    CurrentActor: {
+      /** Format: date-time */
+      absoluteExpiresAt: string;
+      assuranceLevel: string;
+      /** Format: date-time */
+      authenticatedAt: string;
+      displayName: string;
+      globalRoles: string[];
+      /** Format: uuid */
+      id: string;
+      organizationAccess: components['schemas']['OrganizationAccess'][];
+      /** @enum {string} */
+      status: 'ACTIVE' | 'DISABLED';
+      verifiedEmail?: string;
+    };
+    OrganizationAccess: {
+      capabilities: string[];
+      /** Format: uuid */
+      organizationId: string;
+    };
+    SessionResponse: {
+      actor?: components['schemas']['CurrentActor'];
+      authenticated: boolean;
     };
     SystemInfo: {
       name: string;
@@ -123,6 +163,26 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+    };
+  };
+  session: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          '*/*': components['schemas']['SessionResponse'];
+        };
       };
     };
   };
