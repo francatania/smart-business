@@ -54,14 +54,19 @@ class DatabaseMigrationTests {
         flyway.validate();
         assertThat(flyway.migrate().migrationsExecuted).isZero();
 
-        var sessionTables = jdbcTemplate.queryForObject("""
+        var tables = jdbcTemplate.queryForObject("""
                 SELECT count(*)
                 FROM information_schema.tables
                 WHERE table_schema = 'smart_business'
-                  AND table_name IN ('spring_session', 'spring_session_attributes')
+                  AND table_name IN (
+                    'spring_session',
+                    'spring_session_attributes',
+                    'platform_user',
+                    'external_identity'
+                  )
                 """, Integer.class);
 
-        assertThat(sessionTables).isEqualTo(2);
+        assertThat(tables).isEqualTo(4);
         assertThat(environment.getProperty("spring.jpa.hibernate.ddl-auto")).isEqualTo("validate");
         assertThat(environment.getProperty("spring.session.jdbc.initialize-schema"))
                 .isEqualTo("never");

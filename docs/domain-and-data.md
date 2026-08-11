@@ -33,6 +33,11 @@ A physical or virtual place where services are delivered. Availability and profe
 
 A platform identity that can authenticate using one or more verified methods. A user may be a customer of several organizations and may also be a staff member.
 
+The initial persistence model separates `platform_user` from `external_identity`.
+The latter has a unique normalized OIDC `issuer + subject` pair and points to one
+platform user. Verified email and display name are mutable profile attributes;
+they are not identifiers and are never used to merge users.
+
 ### Organization membership
 
 Associates a user with an organization as an owner, administrator, receptionist, or professional.

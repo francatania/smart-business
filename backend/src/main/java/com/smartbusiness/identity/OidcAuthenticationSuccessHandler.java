@@ -1,5 +1,7 @@
 package com.smartbusiness.identity;
 
+import com.smartbusiness.identity.api.AuthenticatedIdentity;
+import com.smartbusiness.identity.api.PlatformIdentityDirectory;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -7,6 +9,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.HexFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +18,7 @@ import org.slf4j.MDC;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
@@ -23,9 +28,14 @@ public class OidcAuthenticationSuccessHandler implements AuthenticationSuccessHa
     private static final Logger logger = LoggerFactory.getLogger(OidcAuthenticationSuccessHandler.class);
 
     private final AuthReturnTargets returnTargets;
+    private final PlatformIdentityDirectory identities;
+    private final Clock clock;
 
-    public OidcAuthenticationSuccessHandler(AuthReturnTargets returnTargets) {
+    public OidcAuthenticationSuccessHandler(
+            AuthReturnTargets returnTargets, PlatformIdentityDirectory identities, Clock clock) {
         this.returnTargets = returnTargets;
+        this.identities = identities;
+        this.clock = clock;
     }
 
     @Override
@@ -35,6 +45,7 @@ public class OidcAuthenticationSuccessHandler implements AuthenticationSuccessHa
         var oidcAuthentication = (OAuth2AuthenticationToken) authentication;
         var surface = AuthSurface.fromRegistrationId(oidcAuthentication.getAuthorizedClientRegistrationId());
         var returnTarget = returnTargets.consume(request, surface);
+        identities.resolve(authenticatedIdentity(oidcAuthentication));
         logger.info(
                 "OIDC login succeeded surface={} registrationId={} subjectFingerprint={} correlationId={}",
                 surface.name().toLowerCase(),
@@ -43,6 +54,28 @@ public class OidcAuthenticationSuccessHandler implements AuthenticationSuccessHa
                 MDC.get("correlationId"));
         response.setHeader(HttpHeaders.CACHE_CONTROL, "no-store");
         response.sendRedirect(returnTarget);
+    }
+
+    private AuthenticatedIdentity authenticatedIdentity(OAuth2AuthenticationToken authentication) {
+        if (!(authentication.getPrincipal() instanceof OidcUser oidcUser)) {
+            throw new IllegalStateException("The configured OIDC client did not produce an OIDC user.");
+        }
+        return new AuthenticatedIdentity(
+                java.net.URI.create(oidcUser.getIssuer().toExternalForm()),
+                oidcUser.getSubject(),
+                displayName(oidcUser),
+                Boolean.TRUE.equals(oidcUser.getEmailVerified()) ? oidcUser.getEmail() : null,
+                Instant.now(clock));
+    }
+
+    private String displayName(OidcUser user) {
+        if (user.getFullName() != null && !user.getFullName().isBlank()) {
+            return user.getFullName();
+        }
+        if (user.getPreferredUsername() != null && !user.getPreferredUsername().isBlank()) {
+            return user.getPreferredUsername();
+        }
+        return user.getSubject();
     }
 
     private String subjectFingerprint(String subject) {

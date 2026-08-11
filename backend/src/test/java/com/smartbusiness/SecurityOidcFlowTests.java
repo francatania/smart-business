@@ -15,6 +15,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.smartbusiness.identity.AuthLoginController;
 import com.smartbusiness.identity.AuthReturnTargets;
 import com.smartbusiness.identity.OidcAuthenticationSuccessHandler;
+import com.smartbusiness.identity.api.AuthenticatedIdentity;
+import com.smartbusiness.identity.api.PlatformIdentity;
+import com.smartbusiness.identity.api.PlatformIdentityDirectory;
+import com.smartbusiness.identity.api.PlatformUserStatus;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -132,6 +140,31 @@ class SecurityOidcFlowTests {
 
     @TestConfiguration(proxyBeanMethods = false)
     static class Clients {
+
+        @Bean
+        Clock identityClock() {
+            return Clock.systemUTC();
+        }
+
+        @Bean
+        PlatformIdentityDirectory platformIdentityDirectory() {
+            return new PlatformIdentityDirectory() {
+                @Override
+                public PlatformIdentity resolve(AuthenticatedIdentity identity) {
+                    return new PlatformIdentity(
+                            UUID.randomUUID(),
+                            PlatformUserStatus.ACTIVE,
+                            identity.displayName(),
+                            identity.verifiedEmail(),
+                            Instant.now());
+                }
+
+                @Override
+                public Optional<PlatformIdentity> findByUserId(UUID userId) {
+                    return Optional.empty();
+                }
+            };
+        }
 
         @Bean
         ClientRegistrationRepository clientRegistrationRepository() {

@@ -156,18 +156,28 @@ subdomain. The browser uses that public Keycloak origin, while the Dockerized
 backend uses explicit internal token and JWK endpoints only in the local
 profile. Shared environments use HTTPS and normal issuer discovery.
 
-### Implicit local account creation
+### Platform identity provisioning
 
 After successful Keycloak authentication:
 
 1. Read the verified OIDC issuer and `sub` claims.
 2. Find an external identity by the `issuer + subject` pair.
 3. If none exists, create a platform user and external-identity record.
-4. Find the customer relationship for the selected organization.
-5. If none exists, create it.
-6. Confirm the appointment.
 
-The OIDC subject, not the email address, is the stable external identity key. User creation and organization relationship creation are separate operations and concepts.
+The `platform_user` record contains only the lifecycle state and permitted profile
+claims needed by the application. `external_identity` stores the normalized OIDC
+issuer and opaque subject, with a database uniqueness constraint on that pair.
+Email, name, and phone values are never used as identity keys or automatic
+linking criteria. A later verified profile refresh may update display data without
+changing the platform user identifier.
+
+First-login provisioning is transactional and retried when concurrent callbacks
+race to create the same external identity. The losing transaction is rolled back;
+both callbacks resolve to the single mapped platform user.
+
+Creating an organization customer relationship during a booking is a separate
+future operation. Authentication alone never creates an organization, customer,
+staff, or role relationship.
 
 ### Returning access
 
