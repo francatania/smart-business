@@ -113,6 +113,22 @@
         "tags": ["auth-login-controller"]
       }
     },
+    "/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "responses": {
+          "204": {
+            "description": "No authenticated OIDC session required provider logout"
+          },
+          "302": {
+            "description": "Redirect to the configured OIDC end-session endpoint"
+          },
+          "403": { "description": "Missing or invalid CSRF token" }
+        },
+        "summary": "End the local application session and initiate OIDC logout",
+        "tags": ["logout-controller"]
+      }
+    },
     "/auth/session": {
       "get": {
         "operationId": "session",

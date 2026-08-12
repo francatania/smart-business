@@ -15,10 +15,13 @@ class OidcBffPropertiesTests {
                     "smart-business.identity.oidc.authorization-uri=https://auth.example.test/auth",
                     "smart-business.identity.oidc.token-uri=https://auth.example.test/token",
                     "smart-business.identity.oidc.jwk-set-uri=https://auth.example.test/certs",
+                    "smart-business.identity.oidc.end-session-uri=https://auth.example.test/logout",
                     "smart-business.identity.oidc.portal-client-secret=portal-test-secret",
                     "smart-business.identity.oidc.portal-callback-uri=https://portal.example.test/api/auth/callback/portal-bff",
+                    "smart-business.identity.oidc.portal-post-logout-uri=https://portal.example.test/",
                     "smart-business.identity.oidc.admin-client-secret=admin-test-secret",
-                    "smart-business.identity.oidc.admin-callback-uri=https://admin.example.test/api/auth/callback/admin-bff");
+                    "smart-business.identity.oidc.admin-callback-uri=https://admin.example.test/api/auth/callback/admin-bff",
+                    "smart-business.identity.oidc.admin-post-logout-uri=https://admin.example.test/");
 
     @Test
     void createsSeparateConfidentialAuthorizationCodeRegistrations() {
@@ -31,6 +34,8 @@ class OidcBffPropertiesTests {
             assertThat(portal.getClientId()).isEqualTo("portal-bff");
             assertThat(portal.getClientSecret()).isEqualTo("portal-test-secret");
             assertThat(portal.getRedirectUri()).isEqualTo("https://portal.example.test/api/auth/callback/portal-bff");
+            assertThat(portal.getProviderDetails().getConfigurationMetadata().get("end_session_endpoint"))
+                    .isEqualTo("https://auth.example.test/logout");
             assertThat(admin.getClientId()).isEqualTo("admin-bff");
             assertThat(admin.getClientSecret()).isEqualTo("admin-test-secret");
             assertThat(admin.getRedirectUri()).isEqualTo("https://admin.example.test/api/auth/callback/admin-bff");
@@ -51,11 +56,11 @@ class OidcBffPropertiesTests {
     }
 
     @Test
-    void rejectsPartialProviderOverridesAndWrongCallbackPaths() {
+    void rejectsPartialProviderOverridesAndUnsafeApplicationDestinations() {
         contextRunner
                 .withPropertyValues(
-                        "smart-business.identity.oidc.jwk-set-uri=",
-                        "smart-business.identity.oidc.portal-callback-uri=https://portal.example.test/callback")
+                        "smart-business.identity.oidc.end-session-uri=",
+                        "smart-business.identity.oidc.portal-post-logout-uri=https://untrusted.example.test/next")
                 .run(context -> assertThat(context).hasFailed());
     }
 }

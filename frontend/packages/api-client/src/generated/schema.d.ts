@@ -37,6 +37,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/auth/logout': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** End the local application session and initiate OIDC logout */
+    post: operations['logout'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/auth/session': {
     parameters: {
       query?: never;
@@ -159,6 +176,38 @@ export interface operations {
       };
       /** @description Unknown application surface */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  logout: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No authenticated OIDC session required provider logout */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Redirect to the configured OIDC end-session endpoint */
+      302: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Missing or invalid CSRF token */
+      403: {
         headers: {
           [name: string]: unknown;
         };
