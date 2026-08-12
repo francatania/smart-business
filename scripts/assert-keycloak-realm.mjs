@@ -42,6 +42,32 @@ invariant(
 );
 invariant(realm.registrationAllowed === false, 'Self-registration is unexpectedly enabled.');
 invariant(realm.resetPasswordAllowed === false, 'Password recovery is unexpectedly enabled.');
+invariant(realm.browserFlow === 'smart-business-browser', 'The passkey browser flow is not bound.');
+invariant(
+  realm.webAuthnPolicyPasswordlessRpEntityName === 'Smart Business',
+  'The passkey RP entity name is unexpected.',
+);
+invariant(
+  realm.webAuthnPolicyPasswordlessRpId === new URL(process.env.KEYCLOAK_PUBLIC_URL).hostname,
+  'The passkey RP ID must match the public Keycloak hostname.',
+);
+invariant(
+  JSON.stringify([...realm.webAuthnPolicyPasswordlessSignatureAlgorithms].sort()) ===
+    JSON.stringify(['ES256', 'RS256']),
+  'The passkey signature algorithms are unexpected.',
+);
+invariant(
+  realm.webAuthnPolicyPasswordlessAttestationConveyancePreference === 'none',
+  'Passkey attestation must be disabled.',
+);
+invariant(
+  realm.webAuthnPolicyPasswordlessResidentKey === 'required',
+  'Passkeys must require discoverable credentials.',
+);
+invariant(
+  realm.webAuthnPolicyPasswordlessUserVerificationRequirement === 'required',
+  'Passkeys must require user verification.',
+);
 
 const discovery = await request('/realms/smart-business/.well-known/openid-configuration');
 invariant(
@@ -145,6 +171,17 @@ if (process.env.KEYCLOAK_EXPECT_GOOGLE === 'true') {
 } else {
   invariant(!google, 'Google identity provider must remain absent without credentials.');
 }
+
+const requiredActions = await adminRequest('/authentication/required-actions');
+const passkeyRegistration = requiredActions.find(
+  ({ alias }) => alias === 'webauthn-register-passwordless',
+);
+invariant(passkeyRegistration, 'The passkey registration action is missing.');
+invariant(passkeyRegistration.enabled === true, 'The passkey registration action is disabled.');
+invariant(
+  passkeyRegistration.defaultAction === false,
+  'Passkey registration must remain optional.',
+);
 
 if (process.env.KEYCLOAK_EXPECT_TEST_USERS === 'true') {
   for (const variable of ['KEYCLOAK_TEST_CUSTOMER_USERNAME', 'KEYCLOAK_TEST_ADMIN_USERNAME']) {

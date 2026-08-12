@@ -96,6 +96,31 @@ export function validateCanonicalConfiguration(candidate = configuration) {
   invariant(google.storeToken === false, 'Google access tokens must not be stored in Keycloak.');
   invariant(google.syncMode === 'IMPORT', 'Google identities must use import synchronization.');
   exactKeys(google.scopes, ['openid', 'profile', 'email'], 'Google identity scopes');
+
+  const passkeys = candidate.passkeys;
+  invariant(
+    passkeys.browserFlowAlias === 'smart-business-browser',
+    'Passkey browser flow is unexpected.',
+  );
+  invariant(
+    passkeys.requiredActionAlias === 'webauthn-register-passwordless',
+    'Passkey registration action is unexpected.',
+  );
+  invariant(passkeys.rpEntityName === 'Smart Business', 'Passkey RP entity name is unexpected.');
+  exactKeys(passkeys.signatureAlgorithms, ['ES256', 'RS256'], 'Passkey signature algorithms');
+  invariant(
+    passkeys.attestationConveyancePreference === 'none',
+    'Passkey attestation must be none.',
+  );
+  invariant(passkeys.residentKey === 'required', 'Passkeys must require discoverable credentials.');
+  invariant(
+    passkeys.userVerificationRequirement === 'required',
+    'Passkeys must require user verification.',
+  );
+  invariant(
+    passkeys.avoidSameAuthenticatorRegistration === true,
+    'Passkeys must reject duplicate authenticator registration.',
+  );
 }
 
 const unsafeValue = /(\$\{|\{\{|<[^>]+>|\*|\b(?:CHANGE_ME|REPLACE_ME|TODO)\b)/iu;
@@ -170,6 +195,10 @@ export function validateEnvironment(values, expectedProfile, label) {
     expectedProfile,
   );
   invariant(keycloakUrl.pathname === '/', `${label} KEYCLOAK_PUBLIC_URL must be an origin.`);
+  invariant(
+    keycloakUrl.hostname.length > 0,
+    `${label} KEYCLOAK_PUBLIC_URL must provide the passkey relying-party ID.`,
+  );
   if (expectedProfile === 'local' && keycloakUrl.hostname === 'localhost') {
     invariant(
       values.KEYCLOAK_NETWORK_ALIAS === 'auth.localhost',

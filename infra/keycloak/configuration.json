@@ -44,5 +44,15 @@
       "syncMode": "IMPORT",
       "scopes": ["openid", "profile", "email"]
     }
-  ]
+  ],
+  "passkeys": {
+    "browserFlowAlias": "smart-business-browser",
+    "requiredActionAlias": "webauthn-register-passwordless",
+    "rpEntityName": "Smart Business",
+    "signatureAlgorithms": ["ES256", "RS256"],
+    "attestationConveyancePreference": "none",
+    "residentKey": "required",
+    "userVerificationRequirement": "required",
+    "avoidSameAuthenticatorRegistration": true
+  }
 }
