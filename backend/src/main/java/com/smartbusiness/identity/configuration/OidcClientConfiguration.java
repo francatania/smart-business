@@ -1,5 +1,6 @@
-package com.smartbusiness.identity;
+package com.smartbusiness.identity.configuration;
 
+import com.smartbusiness.identity.authentication.AuthSurface;
 import java.util.Map;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;

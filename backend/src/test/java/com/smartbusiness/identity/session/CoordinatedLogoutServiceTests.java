@@ -1,7 +1,8 @@
-package com.smartbusiness.identity;
+package com.smartbusiness.identity.session;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.smartbusiness.identity.configuration.OidcBffProperties;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Map;

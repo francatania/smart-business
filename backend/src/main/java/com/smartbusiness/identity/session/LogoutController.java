@@ -1,4 +1,4 @@
-package com.smartbusiness.identity;
+package com.smartbusiness.identity.session;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

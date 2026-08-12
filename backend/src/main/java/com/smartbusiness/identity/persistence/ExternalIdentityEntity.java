@@ -1,4 +1,4 @@
-package com.smartbusiness.identity;
+package com.smartbusiness.identity.persistence;
 
 import com.smartbusiness.identity.api.AuthenticatedIdentity;
 import jakarta.persistence.Column;
@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "external_identity")
-class ExternalIdentityEntity {
+public class ExternalIdentityEntity {
 
     @Id
     private UUID id;
@@ -40,7 +40,7 @@ class ExternalIdentityEntity {
 
     protected ExternalIdentityEntity() {}
 
-    ExternalIdentityEntity(PlatformUserEntity platformUser, AuthenticatedIdentity identity, Instant now) {
+    public ExternalIdentityEntity(PlatformUserEntity platformUser, AuthenticatedIdentity identity, Instant now) {
         this.id = UUID.randomUUID();
         this.platformUser = platformUser;
         this.issuer = identity.issuer().toString();
@@ -49,11 +49,11 @@ class ExternalIdentityEntity {
         this.lastAuthenticatedAt = identity.authenticatedAt();
     }
 
-    void recordAuthentication(Instant authenticatedAt) {
+    public void recordAuthentication(Instant authenticatedAt) {
         lastAuthenticatedAt = authenticatedAt;
     }
 
-    PlatformUserEntity platformUser() {
+    public PlatformUserEntity platformUser() {
         return platformUser;
     }
 }

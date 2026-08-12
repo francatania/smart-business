@@ -1,5 +1,6 @@
-package com.smartbusiness.identity;
+package com.smartbusiness.identity.configuration;
 
+import com.smartbusiness.identity.authentication.AuthSurface;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -49,7 +50,7 @@ public record OidcBffProperties(
         return authorizationUri != null && tokenUri != null && jwkSetUri != null && endSessionUri != null;
     }
 
-    URI postLogoutUri(AuthSurface surface) {
+    public URI postLogoutUri(AuthSurface surface) {
         return switch (surface) {
             case PORTAL -> portalPostLogoutUri;
             case ADMIN -> adminPostLogoutUri;

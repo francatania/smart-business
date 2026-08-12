@@ -1,10 +1,10 @@
-package com.smartbusiness.identity;
+package com.smartbusiness.identity.authorization;
 
+import com.smartbusiness.identity.api.PlatformAuthorizationPolicy;
 import com.smartbusiness.identity.api.PlatformIdentityDirectory;
 import com.smartbusiness.identity.api.PlatformUserStatus;
 import java.util.function.Supplier;
 import org.springframework.security.authorization.AuthorizationDecision;
-import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -12,7 +12,7 @@ import org.springframework.security.web.access.intercept.RequestAuthorizationCon
 import org.springframework.stereotype.Component;
 
 @Component
-public class PlatformUserAuthorizationManager implements AuthorizationManager<RequestAuthorizationContext> {
+public class PlatformUserAuthorizationManager implements PlatformAuthorizationPolicy {
 
     private final PlatformIdentityDirectory identities;
 

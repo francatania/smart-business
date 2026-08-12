@@ -1,4 +1,4 @@
-package com.smartbusiness.identity;
+package com.smartbusiness.identity.persistence;
 
 import com.smartbusiness.identity.api.AuthenticatedIdentity;
 import com.smartbusiness.identity.api.PlatformIdentity;
@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "platform_user")
-class PlatformUserEntity {
+public class PlatformUserEntity {
 
     @Id
     private UUID id;
@@ -56,11 +56,11 @@ class PlatformUserEntity {
         this.lastAuthenticatedAt = identity.authenticatedAt();
     }
 
-    static PlatformUserEntity create(AuthenticatedIdentity identity, Instant now) {
+    public static PlatformUserEntity create(AuthenticatedIdentity identity, Instant now) {
         return new PlatformUserEntity(identity, now);
     }
 
-    void refreshProfile(AuthenticatedIdentity identity, Instant now) {
+    public void refreshProfile(AuthenticatedIdentity identity, Instant now) {
         displayName = identity.displayName();
         if (identity.verifiedEmail() == null) {
             verifiedEmail = null;
@@ -73,11 +73,11 @@ class PlatformUserEntity {
         lastAuthenticatedAt = identity.authenticatedAt();
     }
 
-    PlatformIdentity toApi() {
+    public PlatformIdentity toApi() {
         return new PlatformIdentity(id, status, displayName, verifiedEmail, lastAuthenticatedAt);
     }
 
-    UUID id() {
+    public UUID id() {
         return id;
     }
 }

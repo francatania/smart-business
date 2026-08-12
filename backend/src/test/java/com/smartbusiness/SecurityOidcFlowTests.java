@@ -13,23 +13,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.smartbusiness.identity.AuthLoginController;
-import com.smartbusiness.identity.AuthReturnTargets;
-import com.smartbusiness.identity.CoordinatedLogoutService;
-import com.smartbusiness.identity.CsrfController;
-import com.smartbusiness.identity.CurrentActorService;
-import com.smartbusiness.identity.LogoutController;
-import com.smartbusiness.identity.OidcAuthenticationSuccessHandler;
-import com.smartbusiness.identity.OidcBffProperties;
-import com.smartbusiness.identity.PlatformUserAuthorizationManager;
-import com.smartbusiness.identity.SessionController;
 import com.smartbusiness.identity.api.AuthenticatedIdentity;
 import com.smartbusiness.identity.api.OrganizationAccessResolver;
 import com.smartbusiness.identity.api.PlatformIdentity;
 import com.smartbusiness.identity.api.PlatformIdentityDirectory;
 import com.smartbusiness.identity.api.PlatformUserStatus;
+import com.smartbusiness.identity.api.SessionSecurityPolicy;
+import com.smartbusiness.identity.authentication.AuthLoginController;
+import com.smartbusiness.identity.authentication.AuthReturnTargets;
+import com.smartbusiness.identity.authentication.OidcAuthenticationSuccessHandler;
+import com.smartbusiness.identity.authorization.CurrentActorService;
+import com.smartbusiness.identity.authorization.PlatformUserAuthorizationManager;
+import com.smartbusiness.identity.configuration.OidcBffProperties;
+import com.smartbusiness.identity.session.CoordinatedLogoutService;
+import com.smartbusiness.identity.session.CsrfController;
+import com.smartbusiness.identity.session.LogoutController;
+import com.smartbusiness.identity.session.SessionController;
 import java.net.URI;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -317,6 +319,11 @@ class SecurityOidcFlowTests {
         @Bean
         Clock identityClock() {
             return Clock.systemUTC();
+        }
+
+        @Bean
+        SessionSecurityPolicy sessionSecurityPolicy() {
+            return () -> Duration.ofDays(90);
         }
 
         @Bean

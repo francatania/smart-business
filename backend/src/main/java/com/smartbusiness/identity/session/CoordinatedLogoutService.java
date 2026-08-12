@@ -1,5 +1,7 @@
-package com.smartbusiness.identity;
+package com.smartbusiness.identity.session;
 
+import com.smartbusiness.identity.authentication.AuthSurface;
+import com.smartbusiness.identity.configuration.OidcBffProperties;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.net.URI;

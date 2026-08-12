@@ -1,4 +1,4 @@
-package com.smartbusiness.identity;
+package com.smartbusiness.identity.authentication;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

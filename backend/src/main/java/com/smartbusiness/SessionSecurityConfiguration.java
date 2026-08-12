@@ -1,6 +1,6 @@
 package com.smartbusiness;
 
-import com.smartbusiness.identity.SessionSecurityProperties;
+import com.smartbusiness.identity.api.SessionSecurityPolicy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.session.web.http.CookieSerializer;
@@ -11,7 +11,7 @@ class SessionSecurityConfiguration {
 
     @Bean
     CookieSerializer sessionCookieSerializer(
-            PlatformProperties platformProperties, SessionSecurityProperties sessionProperties) {
+            PlatformProperties platformProperties, SessionSecurityPolicy sessionSecurityPolicy) {
         var serializer = new DefaultCookieSerializer();
         var deployed = "deployed".equals(platformProperties.environment());
         serializer.setCookieName(deployed ? "__Host-SBSESSION" : "SBSESSION");
@@ -20,7 +20,7 @@ class SessionSecurityConfiguration {
         serializer.setUseSecureCookie(deployed);
         serializer.setSameSite("Lax");
         serializer.setCookieMaxAge(
-                Math.toIntExact(sessionProperties.absoluteTimeout().toSeconds()));
+                Math.toIntExact(sessionSecurityPolicy.absoluteTimeout().toSeconds()));
         return serializer;
     }
 }

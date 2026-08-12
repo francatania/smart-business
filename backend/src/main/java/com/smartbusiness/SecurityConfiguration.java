@@ -1,6 +1,6 @@
 package com.smartbusiness;
 
-import com.smartbusiness.identity.PlatformUserAuthorizationManager;
+import com.smartbusiness.identity.api.PlatformAuthorizationPolicy;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import org.slf4j.Logger;
@@ -58,7 +58,7 @@ class SecurityConfiguration {
             SessionAuthenticationStrategy sessionAuthenticationStrategy,
             CsrfTokenRepository csrfTokenRepository,
             AbsoluteSessionTimeoutFilter absoluteSessionTimeoutFilter,
-            PlatformUserAuthorizationManager platformUserAuthorizationManager,
+            PlatformAuthorizationPolicy platformAuthorizationPolicy,
             @Qualifier("oidcAuthenticationSuccessHandler") AuthenticationSuccessHandler authenticationSuccessHandler)
             throws Exception {
         return http.authorizeHttpRequests(authorize -> authorize
@@ -77,7 +77,7 @@ class SecurityConfiguration {
                         .requestMatchers("/actuator/health/**", "/actuator/info", "/actuator/prometheus")
                         .permitAll()
                         .anyRequest()
-                        .access(platformUserAuthorizationManager))
+                        .access(platformAuthorizationPolicy))
                 .csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository)
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
                 .cors(AbstractHttpConfigurer::disable)

@@ -1,4 +1,4 @@
-package com.smartbusiness.identity;
+package com.smartbusiness.identity.authentication;
 
 import com.smartbusiness.identity.api.AuthenticatedIdentity;
 import com.smartbusiness.identity.api.PlatformIdentityDirectory;

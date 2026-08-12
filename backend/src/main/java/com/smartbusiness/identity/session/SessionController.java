@@ -1,6 +1,7 @@
-package com.smartbusiness.identity;
+package com.smartbusiness.identity.session;
 
 import com.smartbusiness.identity.api.CurrentActor;
+import com.smartbusiness.identity.authorization.CurrentActorService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotNull;
 import java.util.Optional;

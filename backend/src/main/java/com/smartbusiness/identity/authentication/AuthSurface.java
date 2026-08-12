@@ -1,8 +1,8 @@
-package com.smartbusiness.identity;
+package com.smartbusiness.identity.authentication;
 
 import java.util.Set;
 
-enum AuthSurface {
+public enum AuthSurface {
     PORTAL("portal", "portal-bff", "/book", Set.of("/book", "/appointments", "/professional/schedule")),
     ADMIN("admin", "admin-bff", "/calendar", Set.of("/calendar", "/customers", "/configuration", "/metrics"));
 
@@ -18,23 +18,23 @@ enum AuthSurface {
         this.allowedPaths = allowedPaths;
     }
 
-    String externalName() {
+    public String externalName() {
         return externalName;
     }
 
-    String registrationId() {
+    public String registrationId() {
         return registrationId;
     }
 
-    String defaultReturnTarget() {
+    public String defaultReturnTarget() {
         return defaultReturnTarget;
     }
 
-    boolean allows(String path) {
+    public boolean allows(String path) {
         return allowedPaths.contains(path);
     }
 
-    static AuthSurface fromExternalName(String value) {
+    public static AuthSurface fromExternalName(String value) {
         for (var surface : values()) {
             if (surface.externalName.equals(value)) {
                 return surface;
@@ -43,7 +43,7 @@ enum AuthSurface {
         throw new IllegalArgumentException("Unknown authentication surface");
     }
 
-    static AuthSurface fromRegistrationId(String value) {
+    public static AuthSurface fromRegistrationId(String value) {
         for (var surface : values()) {
             if (surface.registrationId.equals(value)) {
                 return surface;
