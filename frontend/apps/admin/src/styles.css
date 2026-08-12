@@ -71,6 +71,18 @@ nav a:hover {
   font-size: 0.7rem;
 }
 
+.session-controls {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.session-controls a,
+.session-message {
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+}
+
 .status-dot {
   width: 0.5rem;
   height: 0.5rem;

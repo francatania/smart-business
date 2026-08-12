@@ -265,7 +265,7 @@ Passkey creation must not be required to complete the first booking.
 
 ### Passkey management
 
-Until the Portal and Administration applications expose a dedicated entry point, users manage passkeys in the Keycloak Account Console at `<KEYCLOAK_PUBLIC_URL>/realms/smart-business/account/`. There they can register, label, inspect, and revoke credentials. Revoking a passkey does not revoke Google access; users should keep Google or another enrolled passkey available because the MVP has no automated recovery after every authenticator is lost.
+Portal and Administration expose an **Account security** link to the Keycloak Account Console at `<KEYCLOAK_PUBLIC_URL>/realms/smart-business/account/`. There users can register, label, inspect, and revoke passkeys. Revoking a passkey does not revoke Google access; users should keep Google or another enrolled passkey available because the MVP has no automated recovery after every authenticator is lost.
 
 The Keycloak policy requires a discoverable credential and device user verification, such as biometrics, a PIN, or a screen lock. It requests no enterprise attestation. Whether a browser offers passkeys through autofill or an explicit action depends on the Keycloak 26.7 login form and the browser; the application never forces a browser prompt on page load.
 

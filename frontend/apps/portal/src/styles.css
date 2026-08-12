@@ -52,6 +52,19 @@ nav a:hover {
   background: var(--muted);
 }
 
+.session-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.session-controls a,
+.session-message {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
 main {
   width: min(70rem, calc(100% - 2rem));
   margin: 0 auto;
@@ -133,5 +146,9 @@ main {
     width: 100%;
     overflow-x: auto;
     flex-wrap: nowrap;
+  }
+
+  .session-controls {
+    width: 100%;
   }
 }

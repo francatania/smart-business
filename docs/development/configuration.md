@@ -116,13 +116,14 @@ fail backend startup instead of silently using local credentials.
 
 ## Frontend variables
 
-Vite embeds environment values into public JavaScript bundles. Therefore only names beginning with `VITE_PUBLIC_` are allowed in frontend source. The current applications accept one optional public value:
+Vite embeds environment values into public JavaScript bundles. Therefore only names beginning with `VITE_PUBLIC_` are allowed in frontend source. The current applications accept these optional public values:
 
-| Variable                   | Default | Description                                                |
-| -------------------------- | ------- | ---------------------------------------------------------- |
-| `VITE_PUBLIC_API_BASE_URL` | `/api`  | Same-origin API prefix or an explicitly public alternative |
+| Variable                           | Default                                                     | Description                                                    |
+| ---------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------- |
+| `VITE_PUBLIC_API_BASE_URL`         | `/api`                                                      | Same-origin API prefix or an explicitly public alternative     |
+| `VITE_PUBLIC_KEYCLOAK_ACCOUNT_URL` | `http://auth.localhost:8081/realms/smart-business/account/` | Keycloak Account Console URL used by the Account security link |
 
-Never place passwords, client secrets, access keys, tokens, or private customer values in a Vite variable. The API client sends `credentials: include` and stores no access or refresh token.
+Docker Compose derives the Account Console URL from `KEYCLOAK_PUBLIC_URL` at build time. It is a public navigation URL, not a Keycloak client secret. Never place passwords, client secrets, access keys, tokens, or private customer values in a Vite variable. The API client sends `credentials: include` and stores no access or refresh token.
 
 ## Local overrides and rotation
 

@@ -6,6 +6,8 @@ services:
     build:
       context: ..
       dockerfile: frontend/apps/admin/Dockerfile
+      args:
+        VITE_PUBLIC_KEYCLOAK_ACCOUNT_URL: ${KEYCLOAK_PUBLIC_URL}/realms/smart-business/account/
     restart: unless-stopped
     depends_on:
       backend:
@@ -25,6 +27,8 @@ services:
     build:
       context: ..
       dockerfile: frontend/apps/portal/Dockerfile
+      args:
+        VITE_PUBLIC_KEYCLOAK_ACCOUNT_URL: ${KEYCLOAK_PUBLIC_URL}/realms/smart-business/account/
     restart: unless-stopped
     depends_on:
       backend:
