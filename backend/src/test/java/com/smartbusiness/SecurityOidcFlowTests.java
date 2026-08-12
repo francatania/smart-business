@@ -17,13 +17,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.smartbusiness.identity.AuthLoginController;
 import com.smartbusiness.identity.AuthReturnTargets;
 import com.smartbusiness.identity.CsrfController;
+import com.smartbusiness.identity.CurrentActorService;
 import com.smartbusiness.identity.OidcAuthenticationSuccessHandler;
+import com.smartbusiness.identity.PlatformUserAuthorizationManager;
+import com.smartbusiness.identity.SessionController;
 import com.smartbusiness.identity.api.AuthenticatedIdentity;
+import com.smartbusiness.identity.api.OrganizationAccessResolver;
 import com.smartbusiness.identity.api.PlatformIdentity;
 import com.smartbusiness.identity.api.PlatformIdentityDirectory;
 import com.smartbusiness.identity.api.PlatformUserStatus;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -51,13 +57,16 @@ import org.springframework.test.web.servlet.MockMvc;
             SystemInfoController.class,
             AuthLoginController.class,
             CsrfController.class,
+            SessionController.class,
             SecurityTestEndpoints.class
         },
         properties = {"info.application.name=smart-business", "info.application.version=test"})
 @Import({
     SecurityConfiguration.class,
+    PlatformUserAuthorizationManager.class,
     AuthReturnTargets.class,
     OidcAuthenticationSuccessHandler.class,
+    CurrentActorService.class,
     SecurityOidcFlowTests.Clients.class
 })
 class SecurityOidcFlowTests {
@@ -91,10 +100,53 @@ class SecurityOidcFlowTests {
     }
 
     @Test
+    void returnsACacheSafeAnonymousSessionWithoutTokens() throws Exception {
+        mockMvc.perform(get("/api/auth/session"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"))
+                .andExpect(jsonPath("$.authenticated").value(false))
+                .andExpect(jsonPath("$.actor").doesNotExist())
+                .andExpect(content().string(not(containsString("access_token"))))
+                .andExpect(content().string(not(containsString("refresh_token"))))
+                .andExpect(content().string(not(containsString("id_token"))));
+    }
+
+    @Test
+    void exposesOnlyAllowlistedGlobalRolesAndNoOrganizationAccess() throws Exception {
+        mockMvc.perform(get("/api/auth/session").with(oidcLogin().idToken(token -> token.claim(
+                                "iss", "https://auth.example.test")
+                        .claim("sub", "platform-admin")
+                        .claim("realm_access", Map.of("roles", List.of("platform_admin", "organization_admin"))))))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"))
+                .andExpect(jsonPath("$.authenticated").value(true))
+                .andExpect(jsonPath("$.actor.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.actor.globalRoles[0]").value("platform_admin"))
+                .andExpect(jsonPath("$.actor.globalRoles.length()").value(1))
+                .andExpect(jsonPath("$.actor.organizationAccess").isEmpty())
+                .andExpect(jsonPath("$.actor.assuranceLevel").value("standard"))
+                .andExpect(content().string(not(containsString("organization_admin"))))
+                .andExpect(content().string(not(containsString("access_token"))));
+    }
+
+    @Test
+    void deniesPrivateAccessForADisabledPlatformUser() throws Exception {
+        mockMvc.perform(get("/api/private/test")
+                        .with(oidcLogin().idToken(token -> token.claim("iss", "https://auth.example.test")
+                                .claim("sub", "disabled"))))
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.code").value("access_denied"));
+    }
+
+    @Test
     void acceptsAnAuthenticatedOidcSession() throws Exception {
         var portal = clients.findByRegistrationId("portal-bff");
 
-        mockMvc.perform(get("/api/private/test").with(oidcLogin().clientRegistration(portal)))
+        mockMvc.perform(get("/api/private/test")
+                        .with(oidcLogin()
+                                .clientRegistration(portal)
+                                .idToken(token -> token.claim("iss", "https://auth.example.test"))))
                 .andExpect(status().isOk())
                 .andExpect(content().string("private"));
     }
@@ -109,12 +161,14 @@ class SecurityOidcFlowTests {
                 .andReturn();
         var session = (MockHttpSession) bootstrap.getRequest().getSession(false);
         assertThat(session).isNotNull();
-        mockMvc.perform(post("/api/private/test").with(oidcLogin()).session(session))
+        mockMvc.perform(post("/api/private/test")
+                        .with(oidcLogin().idToken(token -> token.claim("iss", "https://auth.example.test")))
+                        .session(session))
                 .andExpect(status().isForbidden())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.code").value("access_denied"));
         mockMvc.perform(post("/api/private/test")
-                        .with(oidcLogin())
+                        .with(oidcLogin().idToken(token -> token.claim("iss", "https://auth.example.test")))
                         .session(session)
                         .with(csrf().asHeader()))
                 .andExpect(status().isOk())
@@ -193,7 +247,22 @@ class SecurityOidcFlowTests {
                 public Optional<PlatformIdentity> findByUserId(UUID userId) {
                     return Optional.empty();
                 }
+
+                @Override
+                public Optional<PlatformIdentity> findByExternalIdentity(java.net.URI issuer, String subject) {
+                    return Optional.of(new PlatformIdentity(
+                            UUID.nameUUIDFromBytes(subject.getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                            "disabled".equals(subject) ? PlatformUserStatus.DISABLED : PlatformUserStatus.ACTIVE,
+                            "Test User",
+                            "test@example.test",
+                            Instant.parse("2026-08-11T12:00:00Z")));
+                }
             };
+        }
+
+        @Bean
+        OrganizationAccessResolver organizationAccessResolver() {
+            return platformUserId -> java.util.List.of();
         }
 
         @Bean

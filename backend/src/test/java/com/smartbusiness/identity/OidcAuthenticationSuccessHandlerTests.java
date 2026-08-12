@@ -84,5 +84,10 @@ class OidcAuthenticationSuccessHandlerTests {
         public Optional<PlatformIdentity> findByUserId(UUID userId) {
             return Optional.empty();
         }
+
+        @Override
+        public Optional<PlatformIdentity> findByExternalIdentity(java.net.URI issuer, String subject) {
+            return Optional.empty();
+        }
     }
 }
