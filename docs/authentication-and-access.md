@@ -263,6 +263,14 @@ Recommended enrollment moment:
 
 Passkey creation must not be required to complete the first booking.
 
+### Passkey management
+
+Until the Portal and Administration applications expose a dedicated entry point, users manage passkeys in the Keycloak Account Console at `<KEYCLOAK_PUBLIC_URL>/realms/smart-business/account/`. There they can register, label, inspect, and revoke credentials. Revoking a passkey does not revoke Google access; users should keep Google or another enrolled passkey available because the MVP has no automated recovery after every authenticator is lost.
+
+The Keycloak policy requires a discoverable credential and device user verification, such as biometrics, a PIN, or a screen lock. It requests no enterprise attestation. Whether a browser offers passkeys through autofill or an explicit action depends on the Keycloak 26.7 login form and the browser; the application never forces a browser prompt on page load.
+
+Passkeys require a trustworthy origin. Local development uses `auth.localhost`; deployed environments require HTTPS and use the exact hostname of the public Keycloak URL as the relying-party ID. Private browsing, embedded social-media browsers, unsupported devices, and some browser/authenticator combinations can prevent enrollment or authentication. Users should complete passkey management in their system browser or installed PWA.
+
 ## Embedded Browser Considerations
 
 The public booking page is expected to be opened from Instagram and similar applications.

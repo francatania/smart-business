@@ -96,9 +96,46 @@ const unsafeCanonicalConfiguration = {
       scopes: ['openid', 'profile', 'email'],
     },
   ],
+  passkeys: {
+    browserFlowAlias: 'smart-business-browser',
+    requiredActionAlias: 'webauthn-register-passwordless',
+    rpEntityName: 'Smart Business',
+    signatureAlgorithms: ['ES256', 'RS256'],
+    attestationConveyancePreference: 'none',
+    residentKey: 'required',
+    userVerificationRequirement: 'required',
+    avoidSameAuthenticatorRegistration: true,
+  },
 };
 expectFailure('direct-access grant', () =>
   validateCanonicalConfiguration(unsafeCanonicalConfiguration),
+);
+
+expectFailure('passkey verification weakened', () =>
+  validateCanonicalConfiguration({
+    ...unsafeCanonicalConfiguration,
+    passkeys: {
+      ...unsafeCanonicalConfiguration.passkeys,
+      userVerificationRequirement: 'preferred',
+    },
+  }),
+);
+
+expectFailure('passkey attestation enabled', () =>
+  validateCanonicalConfiguration({
+    ...unsafeCanonicalConfiguration,
+    passkeys: {
+      ...unsafeCanonicalConfiguration.passkeys,
+      attestationConveyancePreference: 'direct',
+    },
+  }),
+);
+
+expectFailure('passkey discoverable credentials weakened', () =>
+  validateCanonicalConfiguration({
+    ...unsafeCanonicalConfiguration,
+    passkeys: { ...unsafeCanonicalConfiguration.passkeys, residentKey: 'preferred' },
+  }),
 );
 
 console.log('Unsafe Keycloak configuration fixtures were rejected.');

@@ -2,6 +2,7 @@
 set -euo pipefail
 
 realm='smart-business'
+passkey_browser_flow='smart-business-browser'
 kcadm='/opt/keycloak/bin/kcadm.sh'
 credential_file="${HOME:-/opt/keycloak}/.keycloak/kcadm.config"
 
@@ -196,6 +197,39 @@ reconcile_google_identity_provider() {
   echo 'Google identity brokering was reconciled.'
 }
 
+reconcile_passkeys() {
+  local rp_id
+  rp_id="${KEYCLOAK_PUBLIC_URL#*://}"
+  rp_id="${rp_id%%/*}"
+  rp_id="${rp_id%%:*}"
+
+  "$kcadm" update "realms/$realm" \
+    -s 'webAuthnPolicyPasswordlessRpEntityName=Smart Business' \
+    -s "webAuthnPolicyPasswordlessRpId=$rp_id" \
+    -s 'webAuthnPolicyPasswordlessSignatureAlgorithms=["ES256","RS256"]' \
+    -s 'webAuthnPolicyPasswordlessAttestationConveyancePreference=none' \
+    -s 'webAuthnPolicyPasswordlessRequireResidentKey=false' \
+    -s 'webAuthnPolicyPasswordlessResidentKey=required' \
+    -s 'webAuthnPolicyPasswordlessUserVerificationRequirement=required' \
+    -s webAuthnPolicyPasswordlessCreateTimeout=0 \
+    -s webAuthnPolicyPasswordlessAvoidSameAuthenticatorRegister=true \
+    -s 'webAuthnPolicyPasswordlessAcceptableAaguids=[]' \
+    -s 'webAuthnPolicyPasswordlessExtraOrigins=[]' \
+    >/dev/null
+
+  "$kcadm" update authentication/required-actions/webauthn-register-passwordless -r "$realm" \
+    -s enabled=true \
+    -s defaultAction=false \
+    >/dev/null
+
+  if ! "$kcadm" get authentication/flows -r "$realm" --fields alias --format csv --noquotes \
+    | grep -Fxq "$passkey_browser_flow"; then
+    "$kcadm" create authentication/flows/browser/copy -r "$realm" \
+      -s "newName=$passkey_browser_flow" >/dev/null
+  fi
+  "$kcadm" update "realms/$realm" -s "browserFlow=$passkey_browser_flow" >/dev/null
+}
+
 authenticate
 
 if ! "$kcadm" get "realms/$realm" >/dev/null 2>&1; then
@@ -227,5 +261,6 @@ upsert_client \
   "$ADMIN_BFF_ORIGIN" "$ADMIN_BFF_CALLBACK_URI" "$ADMIN_BFF_POST_LOGOUT_URI"
 
 reconcile_google_identity_provider
+reconcile_passkeys
 
 echo "Keycloak realm reconciliation completed for profile $KEYCLOAK_CONFIGURATION_PROFILE."
