@@ -2,7 +2,7 @@ package com.smartbusiness;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.smartbusiness.identity.SessionSecurityProperties;
+import com.smartbusiness.identity.configuration.SessionSecurityProperties;
 import java.net.URI;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;

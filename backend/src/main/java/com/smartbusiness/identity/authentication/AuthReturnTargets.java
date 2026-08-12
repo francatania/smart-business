@@ -1,4 +1,4 @@
-package com.smartbusiness.identity;
+package com.smartbusiness.identity.authentication;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;

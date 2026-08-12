@@ -1,8 +1,12 @@
-package com.smartbusiness.identity;
+package com.smartbusiness.identity.application;
 
 import com.smartbusiness.identity.api.AuthenticatedIdentity;
 import com.smartbusiness.identity.api.PlatformIdentity;
 import com.smartbusiness.identity.api.PlatformIdentityDirectory;
+import com.smartbusiness.identity.persistence.ExternalIdentityEntity;
+import com.smartbusiness.identity.persistence.ExternalIdentityRepository;
+import com.smartbusiness.identity.persistence.PlatformUserEntity;
+import com.smartbusiness.identity.persistence.PlatformUserRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;

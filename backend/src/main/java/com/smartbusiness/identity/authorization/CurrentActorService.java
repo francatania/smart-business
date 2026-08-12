@@ -1,8 +1,9 @@
-package com.smartbusiness.identity;
+package com.smartbusiness.identity.authorization;
 
 import com.smartbusiness.identity.api.CurrentActor;
 import com.smartbusiness.identity.api.OrganizationAccessResolver;
 import com.smartbusiness.identity.api.PlatformIdentityDirectory;
+import com.smartbusiness.identity.api.SessionSecurityPolicy;
 import jakarta.servlet.http.HttpSession;
 import java.time.Instant;
 import java.util.Collection;
@@ -21,18 +22,18 @@ public class CurrentActorService {
 
     private final PlatformIdentityDirectory identities;
     private final OrganizationAccessResolver organizationAccess;
-    private final SessionSecurityProperties sessionProperties;
+    private final SessionSecurityPolicy sessionSecurityPolicy;
 
     public CurrentActorService(
             PlatformIdentityDirectory identities,
             OrganizationAccessResolver organizationAccess,
-            SessionSecurityProperties sessionProperties) {
+            SessionSecurityPolicy sessionSecurityPolicy) {
         this.identities = identities;
         this.organizationAccess = organizationAccess;
-        this.sessionProperties = sessionProperties;
+        this.sessionSecurityPolicy = sessionSecurityPolicy;
     }
 
-    Optional<CurrentActor> resolve(OAuth2AuthenticationToken authentication, HttpSession session) {
+    public Optional<CurrentActor> resolve(OAuth2AuthenticationToken authentication, HttpSession session) {
         if (!(authentication.getPrincipal() instanceof OidcUser user)) {
             return Optional.empty();
         }
@@ -67,6 +68,6 @@ public class CurrentActorService {
     }
 
     private Instant absoluteExpiresAt(HttpSession session) {
-        return Instant.ofEpochMilli(session.getCreationTime()).plus(sessionProperties.absoluteTimeout());
+        return Instant.ofEpochMilli(session.getCreationTime()).plus(sessionSecurityPolicy.absoluteTimeout());
     }
 }

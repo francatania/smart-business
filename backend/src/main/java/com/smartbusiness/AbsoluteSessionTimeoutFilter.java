@@ -1,6 +1,6 @@
 package com.smartbusiness;
 
-import com.smartbusiness.identity.SessionSecurityProperties;
+import com.smartbusiness.identity.api.SessionSecurityPolicy;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,11 +14,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 class AbsoluteSessionTimeoutFilter extends OncePerRequestFilter {
 
-    private final SessionSecurityProperties sessionProperties;
+    private final SessionSecurityPolicy sessionSecurityPolicy;
     private final Clock clock;
 
-    AbsoluteSessionTimeoutFilter(SessionSecurityProperties sessionProperties, Clock identityClock) {
-        this.sessionProperties = sessionProperties;
+    AbsoluteSessionTimeoutFilter(SessionSecurityPolicy sessionSecurityPolicy, Clock identityClock) {
+        this.sessionSecurityPolicy = sessionSecurityPolicy;
         this.clock = identityClock;
     }
 
@@ -33,6 +33,6 @@ class AbsoluteSessionTimeoutFilter extends OncePerRequestFilter {
     }
 
     private Instant expiresAt(long creationTime) {
-        return Instant.ofEpochMilli(creationTime).plus(sessionProperties.absoluteTimeout());
+        return Instant.ofEpochMilli(creationTime).plus(sessionSecurityPolicy.absoluteTimeout());
     }
 }

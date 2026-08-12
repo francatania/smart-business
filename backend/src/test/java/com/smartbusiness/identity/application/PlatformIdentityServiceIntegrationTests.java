@@ -1,4 +1,4 @@
-package com.smartbusiness.identity;
+package com.smartbusiness.identity.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

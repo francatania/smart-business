@@ -1,4 +1,4 @@
-package com.smartbusiness.identity;
+package com.smartbusiness.identity.persistence;
 
 import com.smartbusiness.identity.api.PlatformUserStatus;
 import jakarta.persistence.AttributeConverter;
