@@ -22,6 +22,7 @@ import org.springframework.security.web.authentication.session.ChangeSessionIdAu
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import tools.jackson.databind.ObjectMapper;
@@ -67,6 +68,7 @@ class SecurityConfiguration {
                                 "/api/auth/login/**",
                                 "/api/auth/csrf",
                                 "/api/auth/session",
+                                "/api/auth/logout",
                                 "/oauth2/authorization/**",
                                 "/api/auth/callback/**",
                                 "/v3/api-docs/**",
@@ -76,7 +78,8 @@ class SecurityConfiguration {
                         .permitAll()
                         .anyRequest()
                         .access(platformUserAuthorizationManager))
-                .csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository))
+                .csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository)
+                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
                 .cors(AbstractHttpConfigurer::disable)
                 .requestCache(cache -> cache.requestCache(new NullRequestCache()))
                 .sessionManagement(session -> session.sessionAuthenticationStrategy(sessionAuthenticationStrategy))

@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -16,9 +15,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.smartbusiness.identity.AuthLoginController;
 import com.smartbusiness.identity.AuthReturnTargets;
+import com.smartbusiness.identity.CoordinatedLogoutService;
 import com.smartbusiness.identity.CsrfController;
 import com.smartbusiness.identity.CurrentActorService;
+import com.smartbusiness.identity.LogoutController;
 import com.smartbusiness.identity.OidcAuthenticationSuccessHandler;
+import com.smartbusiness.identity.OidcBffProperties;
 import com.smartbusiness.identity.PlatformUserAuthorizationManager;
 import com.smartbusiness.identity.SessionController;
 import com.smartbusiness.identity.api.AuthenticatedIdentity;
@@ -26,6 +28,7 @@ import com.smartbusiness.identity.api.OrganizationAccessResolver;
 import com.smartbusiness.identity.api.PlatformIdentity;
 import com.smartbusiness.identity.api.PlatformIdentityDirectory;
 import com.smartbusiness.identity.api.PlatformUserStatus;
+import java.net.URI;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
@@ -50,7 +53,11 @@ import org.springframework.security.oauth2.client.registration.InMemoryClientReg
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
+import org.springframework.session.web.http.CookieSerializer;
+import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.util.UriComponentsBuilder;
+import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(
         controllers = {
@@ -58,6 +65,7 @@ import org.springframework.test.web.servlet.MockMvc;
             AuthLoginController.class,
             CsrfController.class,
             SessionController.class,
+            LogoutController.class,
             SecurityTestEndpoints.class
         },
         properties = {"info.application.name=smart-business", "info.application.version=test"})
@@ -67,6 +75,7 @@ import org.springframework.test.web.servlet.MockMvc;
     AuthReturnTargets.class,
     OidcAuthenticationSuccessHandler.class,
     CurrentActorService.class,
+    CoordinatedLogoutService.class,
     SecurityOidcFlowTests.Clients.class
 })
 class SecurityOidcFlowTests {
@@ -76,6 +85,9 @@ class SecurityOidcFlowTests {
 
     @Autowired
     private ClientRegistrationRepository clients;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Autowired
     private SessionAuthenticationStrategy sessionAuthenticationStrategy;
@@ -160,6 +172,7 @@ class SecurityOidcFlowTests {
                 .andExpect(jsonPath("$.parameterName").value("_csrf"))
                 .andReturn();
         var session = (MockHttpSession) bootstrap.getRequest().getSession(false);
+        var csrfToken = csrfToken(bootstrap);
         assertThat(session).isNotNull();
         mockMvc.perform(post("/api/private/test")
                         .with(oidcLogin().idToken(token -> token.claim("iss", "https://auth.example.test")))
@@ -170,7 +183,7 @@ class SecurityOidcFlowTests {
         mockMvc.perform(post("/api/private/test")
                         .with(oidcLogin().idToken(token -> token.claim("iss", "https://auth.example.test")))
                         .session(session)
-                        .with(csrf().asHeader()))
+                        .header("X-CSRF-TOKEN", csrfToken))
                 .andExpect(status().isOk())
                 .andExpect(content().string("updated"));
     }
@@ -220,6 +233,82 @@ class SecurityOidcFlowTests {
                 new TestingAuthenticationToken("subject", "credential"), request, response);
 
         assertThat(session.getId()).isNotEqualTo(originalId);
+    }
+
+    @Test
+    void redirectsPortalLogoutToTheConfiguredKeycloakEndSessionEndpoint() throws Exception {
+        var csrfBootstrap = mockMvc.perform(get("/api/auth/csrf")).andReturn();
+        var session = (MockHttpSession) csrfBootstrap.getRequest().getSession(false);
+        var csrfToken = csrfToken(csrfBootstrap);
+        var portal = clients.findByRegistrationId("portal-bff");
+
+        var logout = mockMvc.perform(post("/api/auth/logout")
+                        .session(session)
+                        .with(oidcLogin().clientRegistration(portal))
+                        .header("X-CSRF-TOKEN", csrfToken))
+                .andExpect(status().isFound())
+                .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("SBSESSION=")))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Max-Age=0")))
+                .andReturn();
+
+        assertThat(session.isInvalid()).isTrue();
+        var parameters = UriComponentsBuilder.fromUri(
+                        URI.create(logout.getResponse().getHeader(HttpHeaders.LOCATION)))
+                .build()
+                .getQueryParams();
+        assertThat(parameters.keySet())
+                .containsExactlyInAnyOrder("id_token_hint", "client_id", "post_logout_redirect_uri");
+        assertThat(parameters.getFirst("client_id")).isEqualTo("portal-bff");
+        assertThat(parameters.getFirst("post_logout_redirect_uri")).isEqualTo("https://portal.example.test/");
+        assertThat(parameters).doesNotContainKeys("access_token", "refresh_token");
+    }
+
+    @Test
+    void redirectsAdminLogoutOnlyToTheConfiguredAdminDestination() throws Exception {
+        var admin = clients.findByRegistrationId("admin-bff");
+        var csrfBootstrap = mockMvc.perform(get("/api/auth/csrf")).andReturn();
+        var session = (MockHttpSession) csrfBootstrap.getRequest().getSession(false);
+
+        var logout = mockMvc.perform(post("/api/auth/logout")
+                        .session(session)
+                        .with(oidcLogin().clientRegistration(admin))
+                        .header("X-CSRF-TOKEN", csrfToken(csrfBootstrap)))
+                .andExpect(status().isFound())
+                .andReturn();
+
+        var parameters = UriComponentsBuilder.fromUri(
+                        URI.create(logout.getResponse().getHeader(HttpHeaders.LOCATION)))
+                .build()
+                .getQueryParams();
+        assertThat(parameters.getFirst("client_id")).isEqualTo("admin-bff");
+        assertThat(parameters.getFirst("post_logout_redirect_uri")).isEqualTo("https://admin.example.test/");
+    }
+
+    @Test
+    void requiresCsrfAndMakesRepeatedAnonymousLogoutSafe() throws Exception {
+        mockMvc.perform(post("/api/auth/logout")).andExpect(status().isForbidden());
+
+        var firstCsrfBootstrap = mockMvc.perform(get("/api/auth/csrf")).andReturn();
+        mockMvc.perform(post("/api/auth/logout")
+                        .session((MockHttpSession)
+                                firstCsrfBootstrap.getRequest().getSession(false))
+                        .header("X-CSRF-TOKEN", csrfToken(firstCsrfBootstrap)))
+                .andExpect(status().isNoContent())
+                .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"));
+        var secondCsrfBootstrap = mockMvc.perform(get("/api/auth/csrf")).andReturn();
+        mockMvc.perform(post("/api/auth/logout")
+                        .session((MockHttpSession)
+                                secondCsrfBootstrap.getRequest().getSession(false))
+                        .header("X-CSRF-TOKEN", csrfToken(secondCsrfBootstrap)))
+                .andExpect(status().isNoContent());
+    }
+
+    private String csrfToken(org.springframework.test.web.servlet.MvcResult result) throws Exception {
+        return objectMapper
+                .readTree(result.getResponse().getContentAsString())
+                .get("token")
+                .asText();
     }
 
     @TestConfiguration(proxyBeanMethods = false)
@@ -272,6 +361,32 @@ class SecurityOidcFlowTests {
             return new InMemoryClientRegistrationRepository(portal, admin);
         }
 
+        @Bean
+        CookieSerializer sessionCookieSerializer() {
+            var serializer = new DefaultCookieSerializer();
+            serializer.setCookieName("SBSESSION");
+            serializer.setCookiePath("/");
+            serializer.setUseHttpOnlyCookie(true);
+            serializer.setSameSite("Lax");
+            return serializer;
+        }
+
+        @Bean
+        OidcBffProperties oidcBffProperties() {
+            return new OidcBffProperties(
+                    URI.create("https://auth.example.test"),
+                    URI.create("https://auth.example.test/oauth2/authorize"),
+                    URI.create("https://auth.example.test/oauth2/token"),
+                    URI.create("https://auth.example.test/oauth2/certs"),
+                    URI.create("https://auth.example.test/logout"),
+                    "portal-test-secret",
+                    URI.create("https://portal.example.test/api/auth/callback/portal-bff"),
+                    URI.create("https://portal.example.test/"),
+                    "admin-test-secret",
+                    URI.create("https://admin.example.test/api/auth/callback/admin-bff"),
+                    URI.create("https://admin.example.test/"));
+        }
+
         private ClientRegistration registration(String registrationId, String redirectUri) {
             return ClientRegistration.withRegistrationId(registrationId)
                     .clientId(registrationId)
@@ -284,6 +399,7 @@ class SecurityOidcFlowTests {
                     .tokenUri("https://auth.example.test/oauth2/token")
                     .jwkSetUri("https://auth.example.test/oauth2/certs")
                     .issuerUri("https://auth.example.test")
+                    .providerConfigurationMetadata(Map.of("end_session_endpoint", "https://auth.example.test/logout"))
                     .userNameAttributeName("sub")
                     .clientSettings(ClientRegistration.ClientSettings.builder()
                             .requireProofKey(true)

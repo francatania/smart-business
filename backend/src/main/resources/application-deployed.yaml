@@ -6,8 +6,10 @@ smart-business:
       issuer-uri: ${OIDC_ISSUER_URI}
       portal-client-secret: ${PORTAL_BFF_CLIENT_SECRET}
       portal-callback-uri: ${PORTAL_BFF_CALLBACK_URI}
+      portal-post-logout-uri: ${PORTAL_BFF_POST_LOGOUT_URI}
       admin-client-secret: ${ADMIN_BFF_CLIENT_SECRET}
       admin-callback-uri: ${ADMIN_BFF_CALLBACK_URI}
+      admin-post-logout-uri: ${ADMIN_BFF_POST_LOGOUT_URI}
 
 spring:
   main:

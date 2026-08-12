@@ -85,6 +85,26 @@ The browser receives a secure, HTTP-only cookie for the Spring application sessi
 
 Spring Session JDBC stores application sessions so multiple backend replicas can serve the same authenticated user. Application logout invalidates the Spring session and completes the appropriate Keycloak logout flow.
 
+### Coordinated logout
+
+`POST /api/auth/logout` is a same-origin, CSRF-protected operation available to
+both browser applications. It always invalidates the local Spring Security
+context, JDBC session, authorized-client state, and session cookie first.
+
+For an authenticated Portal or Administration OIDC session, the response then
+redirects the browser to Keycloak's configured RP-initiated logout endpoint.
+The redirect contains only the OIDC `id_token_hint`, the matching BFF
+`client_id`, and that application's configured root post-logout URI. The
+browser cannot provide or influence the destination. These protocol parameters
+are used only for the immediate navigation to Keycloak; they are never stored
+in browser storage or returned by application APIs.
+
+Anonymous or repeated logout requests that include a valid CSRF token are safe
+and return `204 No Content` after clearing the local cookie. If Keycloak is
+unavailable after local invalidation, the application session remains ended;
+the user may need to sign in again because the provider-side SSO logout could
+not be completed.
+
 ### BFF login endpoints
 
 Portal and Administration start authentication through separate backend entry

@@ -78,13 +78,14 @@ deployment, run the reconciler, and verify login before retiring the old
 deployment configuration. Google brokering is disabled when both Google values
 are absent and fails closed when only one value is supplied.
 
-The backend normally derives authorization, token, and JWK endpoints from
-`OIDC_ISSUER_URI`. `OIDC_AUTHORIZATION_URI`, `OIDC_TOKEN_URI`, and
-`OIDC_JWK_SET_URI` are an all-or-nothing override used by tests and local Google
-brokering. The local browser reaches Keycloak at `localhost`, while the
-containerized backend uses Keycloak's private Docker endpoint for token and JWK
-requests. Shared deployments must rely on issuer discovery and must not define
-these overrides.
+The backend normally derives authorization, token, JWK, and end-session
+endpoints from `OIDC_ISSUER_URI`. `OIDC_AUTHORIZATION_URI`, `OIDC_TOKEN_URI`,
+`OIDC_JWK_SET_URI`, and `OIDC_END_SESSION_URI` are an all-or-nothing override
+used by tests and local Google brokering. The local browser reaches Keycloak at
+`localhost`, while the containerized backend uses Keycloak's private Docker
+endpoint for token and JWK requests. The end-session endpoint must always use
+the browser-reachable Keycloak origin. Shared deployments must rely on issuer
+discovery and must not define these overrides.
 
 To create local Google credentials, register this exact redirect URI in Google
 Cloud after choosing a Web application client:

@@ -1,5 +1,6 @@
 package com.smartbusiness.identity;
 
+import java.util.Map;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,6 +42,8 @@ class OidcClientConfiguration {
                     .authorizationUri(properties.authorizationUri().toString())
                     .tokenUri(properties.tokenUri().toString())
                     .jwkSetUri(properties.jwkSetUri().toString())
+                    .providerConfigurationMetadata(Map.of(
+                            "end_session_endpoint", properties.endSessionUri().toString()))
                     .issuerUri(properties.issuerUri().toString())
                     .userNameAttributeName("sub");
         } else {
