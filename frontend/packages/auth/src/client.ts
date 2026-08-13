@@ -68,7 +68,7 @@ export class BrowserAuthClient {
 
   constructor(private readonly options: BrowserAuthClientOptions) {
     this.apiBaseUrl = normaliseApiBaseUrl(options.apiBaseUrl ?? '/api');
-    this.fetch = options.fetch ?? globalThis.fetch;
+    this.fetch = options.fetch ?? ((input, init) => globalThis.fetch(input, init));
     this.location = options.location ?? globalThis.location;
     this.document = options.document ?? globalThis.document;
   }

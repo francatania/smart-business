@@ -55,6 +55,20 @@ describe('BrowserAuthClient', () => {
     });
   });
 
+  it('uses the browser fetch through the global context when no fetch is supplied', async () => {
+    const globalFetch = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(response({ authenticated: false }));
+    const client = new BrowserAuthClient({ location: createLocation(), surface: 'portal' });
+
+    await client.loadSession();
+
+    expect(globalFetch).toHaveBeenCalledWith('/api/auth/session', {
+      cache: 'no-store',
+      credentials: 'include',
+    });
+  });
+
   it('attaches an in-memory CSRF token only to unsafe same-origin requests', async () => {
     const fetch = vi
       .fn<typeof globalThis.fetch>()
