@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "5.7.1",
+    "@smart-business/auth": "workspace:*",
     "@smart-business/api-client": "workspace:*",
     "@smart-business/ui": "workspace:*",
     "@tanstack/react-query": "5.101.4",

@@ -1,6 +1,7 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
 
 import { AppStatus } from './components/app-status';
+import { SessionControls } from './components/session-controls';
 import { CalendarPage } from './pages/calendar-page';
 import { ConfigurationPage } from './pages/configuration-page';
 import { CustomersPage } from './pages/customers-page';
@@ -32,6 +33,7 @@ export function App() {
             </NavLink>
           ))}
         </nav>
+        <SessionControls />
         <AppStatus />
       </aside>
       <main>

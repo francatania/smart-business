@@ -34,6 +34,9 @@ importers:
       '@smart-business/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@smart-business/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@smart-business/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -95,6 +98,9 @@ importers:
       '@smart-business/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@smart-business/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@smart-business/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -180,10 +186,35 @@ importers:
         version: 6.0.3
 
   frontend/packages/auth:
+    dependencies:
+      '@smart-business/api-client':
+        specifier: workspace:*
+        version: link:../api-client
+      '@tanstack/react-query':
+        specifier: 5.101.4
+        version: 5.101.4(react@19.2.8)
+      react:
+        specifier: 19.2.8
+        version: 19.2.8
     devDependencies:
+      '@testing-library/jest-dom':
+        specifier: 7.0.0
+        version: 7.0.0(@testing-library/dom@10.4.1)
+      '@testing-library/react':
+        specifier: 16.3.2
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@types/react':
+        specifier: 19.2.14
+        version: 19.2.14
+      jsdom:
+        specifier: 30.0.1
+        version: 30.0.1
       typescript:
         specifier: 6.0.3
         version: 6.0.3
+      vitest:
+        specifier: 4.1.10
+        version: 4.1.10(@types/node@24.13.3)(jsdom@30.0.1)(vite@8.2.0(@types/node@24.13.3)(jiti@2.7.0)(terser@5.49.0))
 
   frontend/packages/shared-types:
     devDependencies:

@@ -2,6 +2,8 @@ import createClient from 'openapi-fetch';
 
 import type { paths } from './generated/schema.js';
 
+export type { components } from './generated/schema.js';
+
 export const defaultApiBaseUrl = '/api';
 
 export function createApiClient(baseUrl: string = defaultApiBaseUrl) {

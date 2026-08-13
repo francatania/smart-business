@@ -1,5 +1,7 @@
 FROM node:24.18.1-bookworm AS build
 WORKDIR /workspace
+ARG VITE_PUBLIC_KEYCLOAK_ACCOUNT_URL
+ENV VITE_PUBLIC_KEYCLOAK_ACCOUNT_URL=$VITE_PUBLIC_KEYCLOAK_ACCOUNT_URL
 RUN corepack enable && corepack prepare pnpm@10.34.0 --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY frontend/packages ./frontend/packages

@@ -1,13 +1,13 @@
-export type SessionStatus = 'loading' | 'anonymous' | 'authenticated';
-
-export interface BrowserSession {
-  status: SessionStatus;
-  displayName?: string;
-}
-
-export function fetchWithSession(
-  input: RequestInfo | URL,
-  init: RequestInit = {},
-): Promise<Response> {
-  return fetch(input, { ...init, credentials: 'include' });
-}
+export {
+  BrowserAuthClient,
+  currentRelativeLocation,
+  isSafeReturnTo,
+  type AuthState,
+  type AuthSurface,
+  type BrowserAuthClientOptions,
+  type CsrfTokenResponse,
+  type CurrentActor,
+  type SessionResponse,
+  type SessionStatus,
+} from './client.js';
+export { AuthProvider, useAuth, useAuthActions, type AuthProviderProps } from './react.js';

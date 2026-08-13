@@ -5,6 +5,9 @@ import { MemoryRouter } from 'react-router-dom';
 import { App } from './app';
 
 vi.mock('./components/app-status', () => ({ AppStatus: () => <div>Test status</div> }));
+vi.mock('./components/session-controls', () => ({
+  SessionControls: () => <div>Session controls</div>,
+}));
 
 function renderRoute(route: string) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
