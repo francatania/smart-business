@@ -3,11 +3,67 @@ import { expect, test } from '@playwright/test';
 const portalBaseUrl = process.env.PORTAL_BASE_URL ?? 'http://127.0.0.1:5173';
 const adminBaseUrl = process.env.ADMIN_BASE_URL ?? 'http://127.0.0.1:5174';
 
+const authenticatedSession = {
+  actor: {
+    absoluteExpiresAt: '2026-08-16T18:00:00Z',
+    assuranceLevel: 'standard',
+    authenticatedAt: '2026-08-13T10:00:00Z',
+    displayName: 'Portal user',
+    globalRoles: [],
+    id: '0e18c9e2-1ef4-4e67-8e4c-7b8c6a44713e',
+    organizationAccess: [],
+    status: 'ACTIVE',
+  },
+  authenticated: true,
+};
+
 test('portal loads a deep route and reaches the API through its proxy', async ({ page }) => {
   await page.goto(`${portalBaseUrl}/book`);
 
   await expect(page.getByRole('heading', { name: 'Book your next service' })).toBeVisible();
   await expect(page.locator('footer')).toContainText('smart-business');
+});
+
+test('portal keeps private customer content hidden for an anonymous session', async ({ page }) => {
+  await page.route('**/api/auth/session', (route) =>
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ authenticated: false }),
+    }),
+  );
+  await page.goto(`${portalBaseUrl}/appointments`);
+
+  await expect(page.getByRole('heading', { name: 'Sign in to continue' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'My appointments' })).toHaveCount(0);
+});
+
+test('portal renders customer content only after an authenticated session response', async ({
+  page,
+}) => {
+  await page.route('**/api/auth/session', (route) =>
+    route.fulfill({ contentType: 'application/json', body: JSON.stringify(authenticatedSession) }),
+  );
+  await page.goto(`${portalBaseUrl}/appointments`);
+
+  await expect(page.getByRole('heading', { name: 'My appointments' })).toBeVisible();
+});
+
+test('portal shows the expired session state without private content', async ({ page }) => {
+  await page.route('**/api/auth/session', (route) => route.fulfill({ status: 401 }));
+  await page.goto(`${portalBaseUrl}/appointments`);
+
+  await expect(page.getByRole('heading', { name: 'Your session has ended' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'My appointments' })).toHaveCount(0);
+});
+
+test('portal denies the professional route without organization access', async ({ page }) => {
+  await page.route('**/api/auth/session', (route) =>
+    route.fulfill({ contentType: 'application/json', body: JSON.stringify(authenticatedSession) }),
+  );
+  await page.goto(`${portalBaseUrl}/professional/schedule`);
+
+  await expect(page.getByRole('heading', { name: 'No organization access' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Professional schedule' })).toHaveCount(0);
 });
 
 test('administration loads a deep route and reaches the API through its proxy', async ({
