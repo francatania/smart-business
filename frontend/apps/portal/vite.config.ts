@@ -30,7 +30,7 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api(?:\/|$)/],
+        navigateFallbackDenylist: [/^\/(?:api|oauth2)(?:\/|$)/],
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname === '/api' || url.pathname.startsWith('/api/'),
