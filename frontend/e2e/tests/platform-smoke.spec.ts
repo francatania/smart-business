@@ -17,6 +17,17 @@ const authenticatedSession = {
   authenticated: true,
 };
 
+const administrationSession = {
+  ...authenticatedSession,
+  actor: {
+    ...authenticatedSession.actor,
+    displayName: 'Administration user',
+    organizationAccess: [
+      { capabilities: [], organizationId: '8e3df83b-93a0-43b9-b2cf-8fe4e570dfe7' },
+    ],
+  },
+};
+
 test('portal loads a deep route and reaches the API through its proxy', async ({ page }) => {
   await page.goto(`${portalBaseUrl}/book`);
 
@@ -66,13 +77,48 @@ test('portal denies the professional route without organization access', async (
   await expect(page.getByRole('heading', { name: 'Professional schedule' })).toHaveCount(0);
 });
 
-test('administration loads a deep route and reaches the API through its proxy', async ({
+test('administration renders its shell only after an authorized session response', async ({
   page,
 }) => {
+  await page.route('**/api/auth/session', (route) =>
+    route.fulfill({ contentType: 'application/json', body: JSON.stringify(administrationSession) }),
+  );
+  await page.route('**/api/system/info', (route) =>
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ name: 'smart-business', version: 'test' }),
+    }),
+  );
   await page.goto(`${adminBaseUrl}/metrics`);
 
   await expect(page.getByRole('heading', { name: 'Metrics', level: 1 })).toBeVisible();
   await expect(page.locator('.app-status')).toContainText('smart-business');
+});
+
+test('administration keeps its shell hidden for an anonymous session', async ({ page }) => {
+  await page.route('**/api/auth/session', (route) =>
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ authenticated: false }),
+    }),
+  );
+  await page.goto(`${adminBaseUrl}/metrics`);
+
+  await expect(page.getByRole('heading', { name: 'Sign in to continue' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Metrics', level: 1 })).toHaveCount(0);
+  await expect(page.getByRole('navigation', { name: 'Administration navigation' })).toHaveCount(0);
+});
+
+test('administration denies an authenticated user without organization access', async ({
+  page,
+}) => {
+  await page.route('**/api/auth/session', (route) =>
+    route.fulfill({ contentType: 'application/json', body: JSON.stringify(authenticatedSession) }),
+  );
+  await page.goto(`${adminBaseUrl}/metrics`);
+
+  await expect(page.getByRole('heading', { name: 'No organization access' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Metrics', level: 1 })).toHaveCount(0);
 });
 
 test('portal keeps its static shell offline while API traffic stays network-only', async ({
