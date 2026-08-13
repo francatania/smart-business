@@ -2,7 +2,7 @@
 
 COMPOSE_ENV_FILE ?= infra/.env
 
-.PHONY: help setup local-config infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev api-generate format test test-fast test-integration e2e verify verify-clean-checkout app-up app-down compose-up secrets-check configuration-check security-check keycloak-config-check keycloak-reconcile keycloak-google-check keycloak-integration-test
+.PHONY: help setup local-config infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev admin-up portal-up api-generate format test test-fast test-integration e2e verify verify-clean-checkout app-up app-down compose-up secrets-check configuration-check security-check keycloak-config-check keycloak-reconcile keycloak-google-check keycloak-integration-test
 
 help:
 	@echo "Smart Business development commands"
@@ -13,6 +13,8 @@ help:
 	@echo "  make backend-run    Run the Spring Boot backend on the host"
 	@echo "  make portal-dev     Run the portal development server"
 	@echo "  make admin-dev      Run the administration development server"
+	@echo "  make portal-up      Rebuild and restart only the Portal container"
+	@echo "  make admin-up       Rebuild and restart only the Administration container"
 	@echo "  make app-up         Build and start the complete application stack"
 	@echo "  make app-down       Stop and remove the complete application stack"
 	@echo "  make compose-up     Alias for make app-up"
@@ -62,6 +64,12 @@ portal-dev:
 
 admin-dev:
 	pnpm --filter @smart-business/admin dev
+
+portal-up: local-config
+	docker compose --env-file $(COMPOSE_ENV_FILE) -f infra/compose.yaml --profile applications up -d --build --no-deps portal
+
+admin-up: local-config
+	docker compose --env-file $(COMPOSE_ENV_FILE) -f infra/compose.yaml --profile applications up -d --build --no-deps admin
 
 app-up: local-config
 	docker compose --env-file $(COMPOSE_ENV_FILE) -f infra/compose.yaml --profile applications up -d --build

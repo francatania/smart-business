@@ -1,6 +1,6 @@
 import { useAuth, useAuthActions } from '@smart-business/auth';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@smart-business/ui';
-import { type PropsWithChildren, type ReactNode, useEffect, useRef } from 'react';
+import { type PropsWithChildren, type ReactNode } from 'react';
 
 export interface ProtectedRouteProps extends PropsWithChildren {
   requiresOrganizationAccess?: boolean;
@@ -13,12 +13,6 @@ interface AccessStateProps {
 }
 
 function AccessState({ action, children, title }: AccessStateProps) {
-  const titleRef = useRef<HTMLHeadingElement>(null);
-
-  useEffect(() => {
-    titleRef.current?.focus();
-  }, [title]);
-
   return (
     <section className="access-state page-grid" aria-live="polite">
       <div className="page-intro access-state-intro">
@@ -34,9 +28,7 @@ function AccessState({ action, children, title }: AccessStateProps) {
           <span aria-hidden="true" className="access-state-mark">
             SB
           </span>
-          <h2 className="access-state-title" id="access-state-title" ref={titleRef} tabIndex={-1}>
-            {title}
-          </h2>
+          <h2 className="access-state-title">{title}</h2>
         </CardHeader>
         <CardContent className="access-state-card-content">
           <div className="stack">
