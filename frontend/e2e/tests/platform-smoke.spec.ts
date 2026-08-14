@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
-const portalBaseUrl = process.env.PORTAL_BASE_URL ?? 'http://127.0.0.1:5173';
-const adminBaseUrl = process.env.ADMIN_BASE_URL ?? 'http://127.0.0.1:5174';
+import { AdminPage } from '../pages/admin-page';
+import { PortalPage } from '../pages/portal-page';
 
 const authenticatedSession = {
   actor: {
@@ -29,57 +29,63 @@ const administrationSession = {
 };
 
 test('portal loads a deep route and reaches the API through its proxy', async ({ page }) => {
-  await page.goto(`${portalBaseUrl}/book`);
+  const portal = new PortalPage(page);
+  await portal.openBooking();
 
-  await expect(page.getByRole('heading', { name: 'Book your next service' })).toBeVisible();
-  await expect(page.locator('footer')).toContainText('smart-business');
+  await portal.expectBooking();
+  await portal.expectFooterBrand();
 });
 
 test('portal keeps private customer content hidden for an anonymous session', async ({ page }) => {
+  const portal = new PortalPage(page);
   await page.route('**/api/auth/session', (route) =>
     route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify({ authenticated: false }),
     }),
   );
-  await page.goto(`${portalBaseUrl}/appointments`);
+  await portal.openAppointments();
 
-  await expect(page.getByRole('heading', { name: 'Sign in to continue' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'My appointments' })).toHaveCount(0);
+  await portal.expectSignInPrompt();
+  await portal.expectAppointmentsHidden();
 });
 
 test('portal renders customer content only after an authenticated session response', async ({
   page,
 }) => {
+  const portal = new PortalPage(page);
   await page.route('**/api/auth/session', (route) =>
     route.fulfill({ contentType: 'application/json', body: JSON.stringify(authenticatedSession) }),
   );
-  await page.goto(`${portalBaseUrl}/appointments`);
+  await portal.openAppointments();
 
-  await expect(page.getByRole('heading', { name: 'My appointments' })).toBeVisible();
+  await portal.expectAppointments();
 });
 
 test('portal shows the expired session state without private content', async ({ page }) => {
+  const portal = new PortalPage(page);
   await page.route('**/api/auth/session', (route) => route.fulfill({ status: 401 }));
-  await page.goto(`${portalBaseUrl}/appointments`);
+  await portal.openAppointments();
 
-  await expect(page.getByRole('heading', { name: 'Your session has ended' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'My appointments' })).toHaveCount(0);
+  await portal.expectExpiredSession();
+  await portal.expectAppointmentsHidden();
 });
 
 test('portal denies the professional route without organization access', async ({ page }) => {
+  const portal = new PortalPage(page);
   await page.route('**/api/auth/session', (route) =>
     route.fulfill({ contentType: 'application/json', body: JSON.stringify(authenticatedSession) }),
   );
-  await page.goto(`${portalBaseUrl}/professional/schedule`);
+  await portal.openProfessionalSchedule();
 
-  await expect(page.getByRole('heading', { name: 'No organization access' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Professional schedule' })).toHaveCount(0);
+  await portal.expectNoOrganizationAccess();
+  await portal.expectProfessionalScheduleHidden();
 });
 
 test('administration renders its shell only after an authorized session response', async ({
   page,
 }) => {
+  const admin = new AdminPage(page);
   await page.route('**/api/auth/session', (route) =>
     route.fulfill({ contentType: 'application/json', body: JSON.stringify(administrationSession) }),
   );
@@ -89,43 +95,46 @@ test('administration renders its shell only after an authorized session response
       body: JSON.stringify({ name: 'smart-business', version: 'test' }),
     }),
   );
-  await page.goto(`${adminBaseUrl}/metrics`);
+  await admin.openMetrics();
 
-  await expect(page.getByRole('heading', { name: 'Metrics', level: 1 })).toBeVisible();
-  await expect(page.locator('.app-status')).toContainText('smart-business');
+  await admin.expectMetrics();
+  await admin.expectApplicationStatus();
 });
 
 test('administration keeps its shell hidden for an anonymous session', async ({ page }) => {
+  const admin = new AdminPage(page);
   await page.route('**/api/auth/session', (route) =>
     route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify({ authenticated: false }),
     }),
   );
-  await page.goto(`${adminBaseUrl}/metrics`);
+  await admin.openMetrics();
 
-  await expect(page.getByRole('heading', { name: 'Sign in to continue' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Metrics', level: 1 })).toHaveCount(0);
-  await expect(page.getByRole('navigation', { name: 'Administration navigation' })).toHaveCount(0);
+  await admin.expectSignInPrompt();
+  await admin.expectMetricsHidden();
+  await admin.expectNavigationHidden();
 });
 
 test('administration denies an authenticated user without organization access', async ({
   page,
 }) => {
+  const admin = new AdminPage(page);
   await page.route('**/api/auth/session', (route) =>
     route.fulfill({ contentType: 'application/json', body: JSON.stringify(authenticatedSession) }),
   );
-  await page.goto(`${adminBaseUrl}/metrics`);
+  await admin.openMetrics();
 
-  await expect(page.getByRole('heading', { name: 'No organization access' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Metrics', level: 1 })).toHaveCount(0);
+  await admin.expectNoOrganizationAccess();
+  await admin.expectMetricsHidden();
 });
 
 test('portal keeps its static shell offline while API traffic stays network-only', async ({
   context,
   page,
 }) => {
-  await page.goto(`${portalBaseUrl}/book`);
+  const portal = new PortalPage(page);
+  await portal.openBooking();
   await page.evaluate(async () => navigator.serviceWorker.ready);
   await page.reload();
   await expect
@@ -134,7 +143,7 @@ test('portal keeps its static shell offline while API traffic stays network-only
 
   await context.setOffline(true);
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Book your next service' })).toBeVisible();
+  await portal.expectBooking();
 
   const apiFailedOffline = await page.evaluate(async () => {
     try {

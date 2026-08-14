@@ -49,7 +49,7 @@ public class CoordinatedLogoutService {
 
     private Optional<URI> endSessionTarget(Authentication authentication) {
         if (!(authentication instanceof OAuth2AuthenticationToken oidcAuthentication)
-                || !(oidcAuthentication.getPrincipal() instanceof OidcUser oidcUser)) {
+                || !(oidcAuthentication.getPrincipal() instanceof OidcUser)) {
             return Optional.empty();
         }
 
@@ -65,7 +65,6 @@ public class CoordinatedLogoutService {
         }
 
         return Optional.of(UriComponentsBuilder.fromUriString(endSessionEndpoint.toString())
-                .queryParam("id_token_hint", oidcUser.getIdToken().getTokenValue())
                 .queryParam("client_id", registration.getClientId())
                 .queryParam(
                         "post_logout_redirect_uri",

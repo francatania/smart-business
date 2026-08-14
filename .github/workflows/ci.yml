@@ -160,13 +160,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Install Chromium
         run: pnpm --filter @smart-business/e2e exec playwright install --with-deps chromium
-      - name: Start containerized applications
-        run: docker compose --env-file infra/.env.example -f infra/compose.yaml --profile applications up -d --build --wait
-      - name: Run browser smoke tests
-        run: pnpm e2e
-      - name: Capture application logs
-        if: failure()
-        run: docker compose --env-file infra/.env.example -f infra/compose.yaml logs --no-color > compose-e2e.log
+      - name: Run isolated identity browser tests
+        run: make identity-e2e
       - name: Upload Playwright artifacts
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -175,11 +170,7 @@ jobs:
           path: |
             frontend/e2e/playwright-report
             frontend/e2e/test-results
-            compose-e2e.log
           if-no-files-found: ignore
-      - name: Stop containerized applications
-        if: always()
-        run: docker compose --env-file infra/.env.example -f infra/compose.yaml --profile applications down --volumes
 
   security:
     name: Security

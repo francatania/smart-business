@@ -21,14 +21,15 @@ Also require pull requests, one approval, resolution of review conversations, di
 - Java compilation, formatting, unit, module-boundary, migration, or PostgreSQL integration failures.
 - Frontend formatting, lint, type, component-test, or production-build failures.
 - A regenerated OpenAPI contract or TypeScript client that differs from the committed files.
-- Chromium smoke failures in either application, the PWA offline shell, or network-only API behavior.
+- Chromium smoke failures in either application, the PWA offline shell, network-only API behavior,
+  or the real Keycloak/PostgreSQL identity boundary.
 - Invalid Compose configuration or unhealthy application containers.
 - Unsafe Keycloak grants, wildcard or non-HTTPS deployed redirects, unresolved
   placeholders, non-idempotent realm reconciliation, lost users after restart, or
   test identities that can run under a deployable profile.
 - Representative secrets, Gitleaks findings, or high/critical dependency vulnerabilities.
 
-Test reports and relevant logs are uploaded even when a job fails. Playwright retains traces, screenshots, and videos only for failed attempts.
+Test reports and relevant logs are uploaded even when a job fails. Identity E2E disables Playwright traces, screenshots, videos, and persisted browser state, then rejects reports and logs that contain configured secrets, tokens, or session cookies before they are eligible for upload.
 
 ## Dependency exceptions
 
@@ -38,6 +39,6 @@ Dependabot proposes Maven, pnpm, GitHub Actions, and Docker updates each Monday.
 
 ## Local parity
 
-`make verify` runs backend and frontend verification, configuration and secret checks, an isolated Keycloak reconciliation test, Compose validation, API drift checks, Chromium smoke tests, and the same vulnerability scanners. It expects Docker to be available and leaves the local application stack running for troubleshooting. The Keycloak integration test cleans up its own uniquely named PostgreSQL volume and network. Use `make infra-down` when finished; it preserves named local-development data volumes.
+`make verify` runs backend and frontend verification, configuration and secret checks, an isolated Keycloak reconciliation test, Compose validation, API drift checks, isolated Chromium identity tests, and the same vulnerability scanners. It expects Docker to be available. The Keycloak and identity E2E tests clean up their own uniquely named PostgreSQL volumes and networks.
 
 `make verify-clean-checkout` archives tracked files into a validated temporary directory, runs both toolchains with their pinned containers, verifies Compose, and builds all application images without using local build output. It never starts or removes the persistent infrastructure volumes.

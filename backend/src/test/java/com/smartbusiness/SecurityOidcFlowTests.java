@@ -259,8 +259,7 @@ class SecurityOidcFlowTests {
                         URI.create(logout.getResponse().getHeader(HttpHeaders.LOCATION)))
                 .build()
                 .getQueryParams();
-        assertThat(parameters.keySet())
-                .containsExactlyInAnyOrder("id_token_hint", "client_id", "post_logout_redirect_uri");
+        assertThat(parameters.keySet()).containsExactlyInAnyOrder("client_id", "post_logout_redirect_uri");
         assertThat(parameters.getFirst("client_id")).isEqualTo("portal-bff");
         assertThat(parameters.getFirst("post_logout_redirect_uri")).isEqualTo("https://portal.example.test/");
         assertThat(parameters).doesNotContainKeys("access_token", "refresh_token");

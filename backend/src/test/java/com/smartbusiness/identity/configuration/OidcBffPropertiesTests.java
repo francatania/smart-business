@@ -41,6 +41,8 @@ class OidcBffPropertiesTests {
             assertThat(admin.getRedirectUri()).isEqualTo("https://admin.example.test/api/auth/callback/admin-bff");
             assertThat(portal.getAuthorizationGrantType().getValue()).isEqualTo("authorization_code");
             assertThat(admin.getAuthorizationGrantType().getValue()).isEqualTo("authorization_code");
+            assertThat(portal.getScopes()).containsExactlyInAnyOrder("openid", "profile", "email", "roles");
+            assertThat(admin.getScopes()).containsExactlyInAnyOrder("openid", "profile", "email", "roles");
         });
     }
 

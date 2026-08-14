@@ -124,6 +124,11 @@ for (const expected of expectedClients) {
     `${expected.clientId} enables service accounts.`,
   );
   invariant(client.fullScopeAllowed === false, `${expected.clientId} grants every realm scope.`);
+  const defaultClientScopes = await adminRequest(`/clients/${client.id}/default-client-scopes`);
+  invariant(
+    defaultClientScopes.some(({ name }) => name === 'roles'),
+    `${expected.clientId} must include the roles client scope.`,
+  );
   invariant(
     JSON.stringify(client.redirectUris) === JSON.stringify([expected.callback]),
     `${expected.clientId} redirect URIs are not exact.`,
@@ -150,6 +155,24 @@ for (const expected of expectedClients) {
   );
   const secret = await adminRequest(`/clients/${clients[0].id}/client-secret`);
   invariant(secret.value === expected.secret, `${expected.clientId} secret was not reconciled.`);
+}
+
+const roleScopes = await adminRequest('/client-scopes');
+const rolesScope = roleScopes.find(({ name }) => name === 'roles');
+invariant(rolesScope, 'The built-in roles client scope is missing.');
+const roleMappers = await adminRequest(`/client-scopes/${rolesScope.id}/protocol-mappers/models`);
+const realmRolesMapper = roleMappers.find(({ name }) => name === 'realm roles');
+invariant(realmRolesMapper, 'The realm roles protocol mapper is missing.');
+invariant(
+  realmRolesMapper.config['id.token.claim'] === 'true',
+  'Realm roles must be included in ID tokens.',
+);
+const rolesScopeMappings = await adminRequest(`/client-scopes/${rolesScope.id}/scope-mappings/realm`);
+for (const roleName of ['platform_admin', 'support_agent']) {
+  invariant(
+    rolesScopeMappings.some(({ name }) => name === roleName),
+    `The roles client scope must include the ${roleName} realm role.`,
+  );
 }
 
 const identityProviders = await adminRequest('/identity-provider/instances');
