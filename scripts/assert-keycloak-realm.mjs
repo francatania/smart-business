@@ -167,7 +167,9 @@ invariant(
   realmRolesMapper.config['id.token.claim'] === 'true',
   'Realm roles must be included in ID tokens.',
 );
-const rolesScopeMappings = await adminRequest(`/client-scopes/${rolesScope.id}/scope-mappings/realm`);
+const rolesScopeMappings = await adminRequest(
+  `/client-scopes/${rolesScope.id}/scope-mappings/realm`,
+);
 for (const roleName of ['platform_admin', 'support_agent']) {
   invariant(
     rolesScopeMappings.some(({ name }) => name === roleName),
