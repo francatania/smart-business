@@ -30,7 +30,7 @@ pnpm --filter @smart-business/admin test
 
 ## Browser smoke tests
 
-Playwright runs Chromium against the containerized routes. The foundation suite verifies both deep links, both backend proxies, the portal offline static shell, and network-only API behavior.
+Playwright runs Chromium against the containerized routes. The foundation suite verifies both deep links, both backend proxies, the portal offline static shell, and network-only API behavior. Page Objects own application routes, visible controls, and Keycloak login mechanics; browser specs own the scenario assertions.
 
 ```bash
 make compose-up
@@ -38,7 +38,18 @@ pnpm --filter @smart-business/e2e exec playwright install chromium
 pnpm e2e
 ```
 
-Override `PORTAL_BASE_URL` and `ADMIN_BASE_URL` only to target another disposable environment. Playwright writes JUnit, HTML, trace, screenshot, and video artifacts in ignored report directories. CI uploads failure artifacts.
+Override `PORTAL_BASE_URL` and `ADMIN_BASE_URL` only to target another disposable environment. Playwright writes JUnit and HTML artifacts in ignored report directories.
+
+### Identity boundary
+
+```bash
+pnpm --filter @smart-business/e2e exec playwright install chromium
+make identity-e2e
+```
+
+`make identity-e2e` creates an isolated Compose project using the test Keycloak realm and seeded identities. It verifies both authorization-code BFFs, logout, CSRF rejection, session rotation and expiry, JDBC persistence after a backend restart, deny-by-default organization access, and browser storage/PWA cache boundaries. The suite recreates only the backend with brief test-only limits before its idle-expiry assertion, while preserving a restart-safe lifetime for the persistence assertion. It removes the project resources on completion.
+
+Identity runs retain only JUnit and HTML reports. Trace, screenshot, video, and persisted browser state artifacts are disabled; an artifact scanner rejects reports or service logs containing a configured secret, token, or session cookie before CI can upload them.
 
 ## Naming and fixtures
 

@@ -110,6 +110,124 @@ find_client_uuid() {
     --fields id --format csv --noquotes 2>/dev/null | sed -n '1{s/,.*//;s/\r$//;p;}'
 }
 
+find_client_scope_uuid() {
+  local scope_name="$1"
+  local scope_uuid
+  local candidate_name
+
+  while IFS=, read -r scope_uuid candidate_name; do
+    candidate_name="${candidate_name%$'\r'}"
+    if [[ "$candidate_name" == "$scope_name" ]]; then
+      printf '%s\n' "$scope_uuid"
+      return
+    fi
+  done < <(
+    "$kcadm" get client-scopes -r "$realm" \
+      --fields id,name --format csv --noquotes 2>/dev/null
+  )
+}
+
+grant_default_client_scope() {
+  local client_id="$1"
+  local scope_name="$2"
+  local client_uuid
+  local scope_uuid
+
+  client_uuid="$(find_client_uuid "$client_id")"
+  scope_uuid="$(find_client_scope_uuid "$scope_name")"
+  if [[ -z "$client_uuid" || -z "$scope_uuid" ]]; then
+    echo "Required Keycloak client scope is unavailable: $scope_name for $client_id" >&2
+    exit 1
+  fi
+
+  "$kcadm" update "clients/$client_uuid/default-client-scopes/$scope_uuid" -r "$realm" >/dev/null
+}
+
+find_client_scope_protocol_mapper_uuid() {
+  local scope_uuid="$1"
+  local mapper_name="$2"
+  local line
+  local compact_line
+  local mapper_uuid
+  local compact_mapper_name="${mapper_name// /}"
+
+  while IFS= read -r line; do
+    compact_line="${line// /}"
+    compact_line="${compact_line//$'\t'/}"
+    if [[ "$compact_line" == *'"id"'* ]]; then
+      mapper_uuid="${compact_line#*\"id\":\"}"
+      mapper_uuid="${mapper_uuid%%\"*}"
+    fi
+    if [[ "$compact_line" == *"\"name\":\"$compact_mapper_name\""* ]]; then
+      if [[ -z "$mapper_uuid" ]]; then
+        echo "Keycloak returned the realm roles mapper without an ID." >&2
+        return
+      fi
+      printf '%s\n' "$mapper_uuid"
+      return
+    fi
+  done < <(
+    "$kcadm" get "client-scopes/$scope_uuid/protocol-mappers/models" -r "$realm" \
+      2>/dev/null
+  )
+}
+
+grant_realm_role_to_client_scope() {
+  local scope_name="$1"
+  local role_name="$2"
+  local scope_uuid
+  local role_payload
+
+  scope_uuid="$(find_client_scope_uuid "$scope_name")"
+  if [[ -z "$scope_uuid" ]]; then
+    echo "Required Keycloak client scope is unavailable: $scope_name" >&2
+    exit 1
+  fi
+  if "$kcadm" get "client-scopes/$scope_uuid/scope-mappings/realm" -r "$realm" \
+    | grep -Fq "\"name\" : \"$role_name\""; then
+    return
+  fi
+
+  role_payload="/tmp/keycloak-$scope_uuid-$role_name.json"
+  {
+    printf '['
+    "$kcadm" get "roles/$role_name" -r "$realm"
+    printf ']'
+  } > "$role_payload"
+  if ! "$kcadm" create "client-scopes/$scope_uuid/scope-mappings/realm" -r "$realm" \
+    -f "$role_payload" >/dev/null; then
+    rm -f "$role_payload"
+    echo "Unable to grant Keycloak realm role $role_name to client scope $scope_name." >&2
+    exit 1
+  fi
+  rm -f "$role_payload"
+}
+
+include_realm_roles_in_id_tokens() {
+  local scope_uuid
+  local mapper_uuid
+  local mapper_names
+
+  scope_uuid="$(find_client_scope_uuid roles)"
+  if [[ -z "$scope_uuid" ]]; then
+    echo 'The built-in Keycloak roles client scope is unavailable.' >&2
+    exit 1
+  fi
+  mapper_uuid="$(find_client_scope_protocol_mapper_uuid "$scope_uuid" 'realm roles')"
+  if [[ -z "$mapper_uuid" ]]; then
+    mapper_names="$(
+      "$kcadm" get "client-scopes/$scope_uuid/protocol-mappers/models" -r "$realm" 2>/dev/null \
+        | sed -n 's/.*"name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'
+    )"
+    echo "Available Keycloak roles-scope mappers: ${mapper_names:-none}." >&2
+    echo 'The built-in Keycloak realm roles mapper is unavailable.' >&2
+    exit 1
+  fi
+
+  "$kcadm" update "client-scopes/$scope_uuid/protocol-mappers/models/$mapper_uuid" -r "$realm" \
+    -s 'config."id.token.claim"=true' >/dev/null
+}
+
 upsert_client() {
   local client_id="$1"
   local client_name="$2"
@@ -259,6 +377,11 @@ upsert_client \
 upsert_client \
   admin-bff 'Administration BFF' "$ADMIN_BFF_CLIENT_SECRET" \
   "$ADMIN_BFF_ORIGIN" "$ADMIN_BFF_CALLBACK_URI" "$ADMIN_BFF_POST_LOGOUT_URI"
+grant_default_client_scope portal-bff roles
+grant_default_client_scope admin-bff roles
+grant_realm_role_to_client_scope roles platform_admin
+grant_realm_role_to_client_scope roles support_agent
+include_realm_roles_in_id_tokens
 
 reconcile_google_identity_provider
 reconcile_passkeys

@@ -2,7 +2,7 @@
 
 COMPOSE_ENV_FILE ?= infra/.env
 
-.PHONY: help setup local-config infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev admin-up portal-up api-generate format test test-fast test-integration e2e verify verify-clean-checkout app-up app-down compose-up secrets-check configuration-check security-check keycloak-config-check keycloak-reconcile keycloak-google-check keycloak-integration-test
+.PHONY: help setup local-config infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev admin-up portal-up api-generate format test test-fast test-integration e2e identity-e2e verify verify-clean-checkout app-up app-down compose-up secrets-check configuration-check security-check keycloak-config-check keycloak-reconcile keycloak-google-check keycloak-integration-test
 
 help:
 	@echo "Smart Business development commands"
@@ -30,6 +30,7 @@ help:
 	@echo "  make test-fast      Run tests that require no external service"
 	@echo "  make test-integration Run PostgreSQL integration tests"
 	@echo "  make e2e            Run Playwright against the containerized applications"
+	@echo "  make identity-e2e   Run isolated Keycloak, PostgreSQL, and browser identity tests"
 	@echo "  make verify         Run the local CI-equivalent verification"
 	@echo "  make verify-clean-checkout Verify tracked files in an isolated temporary checkout"
 	@echo "  make infra-reset    Delete named local development volumes (confirmation required)"
@@ -128,6 +129,9 @@ test-integration:
 e2e:
 	pnpm e2e
 
+identity-e2e:
+	./scripts/test-identity-e2e.sh
+
 verify:
 	cd backend && ./mvnw verify
 	pnpm verify
@@ -135,9 +139,8 @@ verify:
 	$(MAKE) configuration-check
 	$(MAKE) keycloak-integration-test
 	docker compose --env-file infra/.env.example -f infra/compose.yaml config --quiet
-	docker compose --env-file infra/.env.example -f infra/compose.yaml --profile applications up -d --build --wait
 	pnpm api:check
-	pnpm e2e
+	$(MAKE) identity-e2e
 	$(MAKE) security-check
 
 verify-clean-checkout:

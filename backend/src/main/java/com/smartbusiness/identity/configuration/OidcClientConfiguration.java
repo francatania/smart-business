@@ -54,6 +54,6 @@ class OidcClientConfiguration {
         return builder.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .clientSettings(ClientSettings.builder().requireProofKey(true).build())
-                .scope("openid", "profile", "email");
+                .scope("openid", "profile", "email", "roles");
     }
 }
