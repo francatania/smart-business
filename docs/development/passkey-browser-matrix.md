@@ -12,3 +12,12 @@ Passkeys are managed by Keycloak and require a device with a screen lock, PIN, o
 | Embedded social-media browser                  | Not supported     | Not supported  | Not supported  |
 
 Use `auth.localhost` for local validation. Deployed validation requires the final HTTPS Keycloak hostname. Record browser version, operating system, authenticator type, and observed limitation with each result.
+
+Also record whether the credential was platform-synced or hardware-backed,
+whether a second authenticator or Google recovery remained available, and
+whether revocation required existing sessions to be ended separately. Never
+include a credential ID, user handle, username, screenshot of a credential
+prompt, or other passkey material in the result.
+
+See [Identity and Access Operations](./identity-operations.md) for enrollment,
+revocation, recovery limitations, and embedded-browser handling.

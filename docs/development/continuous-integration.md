@@ -25,8 +25,9 @@ Also require pull requests, one approval, resolution of review conversations, di
   or the real Keycloak/PostgreSQL identity boundary.
 - Invalid Compose configuration or unhealthy application containers.
 - Unsafe Keycloak grants, wildcard or non-HTTPS deployed redirects, unresolved
-  placeholders, non-idempotent realm reconciliation, lost users after restart, or
-  test identities that can run under a deployable profile.
+  placeholders, non-idempotent realm reconciliation, unsafe event telemetry,
+  failed database recovery, lost users after restart, or test identities that
+  can run under a deployable profile.
 - Representative secrets, Gitleaks findings, or high/critical dependency vulnerabilities.
 
 Test reports and relevant logs are uploaded even when a job fails. Identity E2E disables Playwright traces, screenshots, videos, and persisted browser state, then rejects reports and logs that contain configured secrets, tokens, or session cookies before they are eligible for upload.
@@ -41,4 +42,4 @@ Dependabot proposes Maven, pnpm, GitHub Actions, and Docker updates each Monday.
 
 `make verify` runs backend and frontend verification, configuration and secret checks, an isolated Keycloak reconciliation test, Compose validation, API drift checks, isolated Chromium identity tests, and the same vulnerability scanners. It expects Docker to be available. The Keycloak and identity E2E tests clean up their own uniquely named PostgreSQL volumes and networks.
 
-`make verify-clean-checkout` archives tracked files into a validated temporary directory, runs both toolchains with their pinned containers, verifies Compose, and builds all application images without using local build output. It never starts or removes the persistent infrastructure volumes.
+`make verify-clean-checkout` archives tracked files into a validated temporary directory, runs both toolchains with their pinned containers, verifies Compose, and builds all application images without using local build output. It never starts or removes the persistent infrastructure volumes. The final identity issue records this result together with `make keycloak-integration-test` and `make identity-e2e`; raw identity logs and environment contents are not pasted into GitHub.

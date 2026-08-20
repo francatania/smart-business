@@ -133,6 +133,9 @@ services:
       KC_DB_PASSWORD: ${KEYCLOAK_DATABASE_PASSWORD}
       KC_HEALTH_ENABLED: 'true'
       KC_METRICS_ENABLED: 'true'
+      KC_EVENT_METRICS_USER_ENABLED: 'true'
+      KC_EVENT_METRICS_USER_EVENTS: code_to_token,identity_provider_first_login,identity_provider_login,identity_provider_post_login,identity_provider_response,login,logout,refresh_token,remove_credential,update_credential,user_session_deleted
+      KC_EVENT_METRICS_USER_TAGS: realm,clientId,idp
       KC_HTTP_PORT: ${KEYCLOAK_PORT}
       KC_HOSTNAME: ${KEYCLOAK_PUBLIC_URL}
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER}

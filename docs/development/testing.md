@@ -49,7 +49,12 @@ make identity-e2e
 
 `make identity-e2e` creates an isolated Compose project using the test Keycloak realm and seeded identities. It verifies both authorization-code BFFs, logout, CSRF rejection, session rotation and expiry, JDBC persistence after a backend restart, deny-by-default organization access, and browser storage/PWA cache boundaries. The suite recreates only the backend with brief test-only limits before its idle-expiry assertion, while preserving a restart-safe lifetime for the persistence assertion. It removes the project resources on completion.
 
-Identity runs retain only JUnit and HTML reports. Trace, screenshot, video, and persisted browser state artifacts are disabled; an artifact scanner rejects reports or service logs containing a configured secret, token, or session cookie before CI can upload them.
+Identity runs retain only JUnit and HTML reports. Trace, screenshot, video, and persisted browser state artifacts are disabled; an artifact scanner rejects reports or service logs containing a configured test identity, secret, token, or session cookie before CI can upload them.
+
+`make keycloak-integration-test` also verifies the realm's privacy-safe event
+policy and metrics. It creates a custom-format PostgreSQL dump, restores it into
+an empty isolated Keycloak database, checks users and configuration before
+reconciliation, and always deletes the temporary backup.
 
 ## Naming and fixtures
 

@@ -69,6 +69,44 @@ invariant(
   'Passkeys must require user verification.',
 );
 
+const eventConfiguration = await adminRequest('/events/config');
+invariant(eventConfiguration.eventsEnabled === true, 'Security event storage is disabled.');
+invariant(
+  eventConfiguration.eventsExpiration === 172800,
+  'Security event retention must be 48 hours.',
+);
+invariant(
+  JSON.stringify([...eventConfiguration.enabledEventTypes].sort()) ===
+    JSON.stringify(
+      [
+        'CLIENT_LOGIN_ERROR',
+        'CODE_TO_TOKEN_ERROR',
+        'EXECUTE_ACTIONS_ERROR',
+        'FEDERATED_IDENTITY_LINK_ERROR',
+        'IDENTITY_PROVIDER_FIRST_LOGIN_ERROR',
+        'IDENTITY_PROVIDER_POST_LOGIN_ERROR',
+        'LOGIN_ERROR',
+        'LOGOUT_ERROR',
+        'REMOVE_CREDENTIAL_ERROR',
+        'REMOVE_FEDERATED_IDENTITY_ERROR',
+        'UPDATE_CREDENTIAL_ERROR',
+      ].sort(),
+    ),
+  'Stored security event types are unexpected.',
+);
+invariant(
+  eventConfiguration.eventsListeners.length === 0,
+  'Keycloak security events must not be written to application logs.',
+);
+invariant(
+  eventConfiguration.adminEventsEnabled === true,
+  'Administrative event storage is disabled.',
+);
+invariant(
+  eventConfiguration.adminEventsDetailsEnabled === false,
+  'Administrative event payloads must not be stored.',
+);
+
 const discovery = await request('/realms/smart-business/.well-known/openid-configuration');
 invariant(
   discovery.issuer === `${process.env.KEYCLOAK_PUBLIC_URL}/realms/smart-business`,
@@ -179,7 +217,13 @@ for (const roleName of ['platform_admin', 'support_agent']) {
 
 const identityProviders = await adminRequest('/identity-provider/instances');
 const google = identityProviders.find(({ alias }) => alias === 'google');
-if (process.env.KEYCLOAK_EXPECT_GOOGLE === 'true') {
+const expectGoogle =
+  process.env.KEYCLOAK_EXPECT_GOOGLE === 'true' ||
+  (!process.env.KEYCLOAK_EXPECT_GOOGLE &&
+    Boolean(
+      process.env.GOOGLE_OAUTH_CLIENT_ID?.trim() && process.env.GOOGLE_OAUTH_CLIENT_SECRET?.trim(),
+    ));
+if (expectGoogle) {
   invariant(google, 'Google identity provider is missing.');
   invariant(google.providerId === 'google', 'Google uses an unexpected Keycloak provider.');
   invariant(google.enabled === true, 'Google identity provider is disabled.');

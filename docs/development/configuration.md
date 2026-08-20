@@ -105,9 +105,9 @@ from a browser session without existing Portal and Keycloak cookies when testing
 the first-login path. The local BFF session is an explicit host-only
 `SBSESSION` cookie with `Path=/`, `HttpOnly`, and `SameSite=Lax`; it retains
 the server-side OIDC state and PKCE verifier through the Keycloak round trip.
-Diagnostic logs contain only a correlation ID, OIDC error code, and a one-way
-subject fingerprint. They never contain an email address, authorization code,
-token, session cookie, or client secret.
+Diagnostic logs contain only a correlation ID, safe OIDC error code, surface,
+and client registration ID. They never contain a subject, username, email
+address, authorization code, token, session cookie, or client secret.
 
 Callback values must be absolute HTTP(S) URLs with the exact paths
 `/api/auth/callback/portal-bff` and `/api/auth/callback/admin-bff`. The deployed
@@ -134,3 +134,8 @@ Docker Compose derives the Account Console URL from `KEYCLOAK_PUBLIC_URL` at bui
 - Application logs and problem responses must contain correlation identifiers, not credentials, tokens, session cookies, raw request bodies, or customer media.
 
 Run `make secrets-check` to exercise the repository scanner and verify its representative fixture. Run `make configuration-check` after frontend builds to ensure only public configuration appears in source and bundles.
+
+Use [Identity and Access Operations](./identity-operations.md) for the supported
+promotion, drift-check, BFF/Google rotation, redirect cutover, and database
+recovery procedures. Shared-environment secrets must be loaded from the
+deployment secret manager rather than copied into commands or tracked files.

@@ -93,11 +93,12 @@ context, JDBC session, authorized-client state, and session cookie first.
 
 For an authenticated Portal or Administration OIDC session, the response then
 redirects the browser to Keycloak's configured RP-initiated logout endpoint.
-The redirect contains only the OIDC `id_token_hint`, the matching BFF
-`client_id`, and that application's configured root post-logout URI. The
-browser cannot provide or influence the destination. These protocol parameters
-are used only for the immediate navigation to Keycloak; they are never stored
-in browser storage or returned by application APIs.
+The redirect contains only the matching BFF `client_id` and that application's
+configured root `post_logout_redirect_uri`; the server-side ID token is not
+placed in the browser URL. The browser cannot provide or influence the
+destination. These protocol parameters are used only for the immediate
+navigation to Keycloak; they are never stored in browser storage or returned by
+application APIs.
 
 Anonymous or repeated logout requests that include a valid CSRF token are safe
 and return `204 No Content` after clearing the local cookie. If Keycloak is
@@ -270,6 +271,12 @@ Portal and Administration expose an **Account security** link to the Keycloak Ac
 The Keycloak policy requires a discoverable credential and device user verification, such as biometrics, a PIN, or a screen lock. It requests no enterprise attestation. Whether a browser offers passkeys through autofill or an explicit action depends on the Keycloak 26.7 login form and the browser; the application never forces a browser prompt on page load.
 
 Passkeys require a trustworthy origin. Local development uses `auth.localhost`; deployed environments require HTTPS and use the exact hostname of the public Keycloak URL as the relying-party ID. Private browsing, embedded social-media browsers, unsupported devices, and some browser/authenticator combinations can prevent enrollment or authentication. Users should complete passkey management in their system browser or installed PWA.
+
+Operational enrollment, revocation, provider rotation, recovery boundaries,
+monitoring, and troubleshooting are defined in
+[Identity and Access Operations](./development/identity-operations.md). The
+assets and trust boundaries behind these controls are recorded in the
+[Identity and Access Threat Model](./development/identity-threat-model.md).
 
 ## Embedded Browser Considerations
 
