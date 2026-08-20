@@ -14,6 +14,8 @@ The product is initially focused on barbershops, but its domain model and core t
 - [Technical Architecture](./technical-architecture.md): selected stack, modular monolith boundaries, persistence, media storage, frontend structure, local infrastructure, and scaling strategy.
 - [Development Conventions](./development/conventions.md): repository language, domain terminology, backend module boundaries, and change conventions.
 - [Passkey Browser Matrix](./development/passkey-browser-matrix.md): manual browser, device, and embedded-browser validation for Keycloak passkeys.
+- [Identity and Access Operations](./development/identity-operations.md): local login, promotion, drift, rotation, backup recovery, monitoring, and troubleshooting.
+- [Identity and Access Threat Model](./development/identity-threat-model.md): identity assets, trust boundaries, threats, controls, and residual risks.
 - [Configuration and Secret Handling](./development/configuration.md): profiles, environment variables, public frontend configuration, local overrides, and credential rotation.
 - [Observability and Audit Conventions](./development/observability.md): correlation, structured logs, management endpoints, operational metrics, and future audit-event rules.
 - [Automated Testing](./development/testing.md): backend test layers, PostgreSQL integration tests, frontend component tests, browser smoke tests, and fixture conventions.

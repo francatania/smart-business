@@ -2,7 +2,7 @@
 
 COMPOSE_ENV_FILE ?= infra/.env
 
-.PHONY: help setup local-config infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev admin-up portal-up api-generate format test test-fast test-integration e2e identity-e2e verify verify-clean-checkout app-up app-down compose-up secrets-check configuration-check security-check keycloak-config-check keycloak-reconcile keycloak-google-check keycloak-integration-test
+.PHONY: help setup local-config infra-up infra-down infra-logs infra-reset backend-run portal-dev admin-dev admin-up portal-up api-generate format test test-fast test-integration e2e identity-e2e verify verify-clean-checkout app-up app-down compose-up secrets-check configuration-check security-check keycloak-config-check keycloak-reconcile keycloak-drift-check keycloak-google-check keycloak-integration-test
 
 help:
 	@echo "Smart Business development commands"
@@ -22,6 +22,7 @@ help:
 	@echo "  make secrets-check  Scan for representative committed-secret patterns"
 	@echo "  make keycloak-config-check Validate canonical and environment Keycloak settings"
 	@echo "  make keycloak-reconcile Reapply local Keycloak realm and BFF client settings"
+	@echo "  make keycloak-drift-check Compare a live realm with the selected environment"
 	@echo "  make keycloak-google-check Verify the configured local Google identity provider"
 	@echo "  make keycloak-integration-test Test reconciliation against isolated Keycloak"
 	@echo "  make security-check Run Git-history and dependency vulnerability scans"
@@ -98,8 +99,11 @@ keycloak-config-check: local-config
 keycloak-reconcile: keycloak-config-check
 	docker compose --env-file $(COMPOSE_ENV_FILE) -f infra/compose.yaml run --rm keycloak-config
 
-keycloak-google-check: local-config
-	set -a; . "$(COMPOSE_ENV_FILE)"; set +a; KEYCLOAK_ASSERT_URL="$$KEYCLOAK_PUBLIC_URL" KEYCLOAK_EXPECT_GOOGLE=true node scripts/assert-keycloak-realm.mjs
+keycloak-drift-check: keycloak-config-check
+	set -a; . "$(COMPOSE_ENV_FILE)"; set +a; KEYCLOAK_ASSERT_URL="$${KEYCLOAK_ASSERT_URL:-$$KEYCLOAK_PUBLIC_URL}" node scripts/assert-keycloak-realm.mjs
+
+keycloak-google-check:
+	KEYCLOAK_EXPECT_GOOGLE=true $(MAKE) keycloak-drift-check
 
 keycloak-integration-test: keycloak-config-check
 	./scripts/test-keycloak-reconciliation.sh

@@ -2,7 +2,7 @@
 
 Smart Business is a business-agnostic platform for appointment-based personal care businesses. It combines scheduling, organization-owned customer service records, secure media, and future AI-assisted consultation. The initial product targets barbershops while keeping domain language suitable for other verticals.
 
-The current foundation provides an executable Spring Boot modular monolith, PostgreSQL persistence, local object storage compatible with S3, email capture, an installable customer/professional portal, a business administration application, generated OpenAPI types, observability, tests, and CI gates. Keycloak supplies the identity-provider foundation, including the server-side Portal and Administration OIDC login flow. User provisioning, session policy, authorization, logout, Google, passkeys, booking, customer records, media workflows, and AI behavior are delivered by later issues and epics.
+The current foundation provides an executable Spring Boot modular monolith, PostgreSQL persistence, local object storage compatible with S3, email capture, an installable customer/professional portal, a business administration application, generated OpenAPI types, observability, tests, and CI gates. Keycloak supplies Portal and Administration OIDC login, Google brokering, passkeys, coordinated logout, and server-side session identity. Booking, organization authorization, customer records, media workflows, account recovery, and AI behavior are delivered by later issues and epics.
 
 ## Repository layout
 
@@ -170,6 +170,10 @@ confidential `portal-bff` and `admin-bff` clients without deleting users. Run
 `make keycloak-reconcile` to reapply those settings after changing local
 configuration.
 
+Local application-user setup, live drift checks, secret rotation, backup
+recovery, monitoring, and identity troubleshooting are documented in
+[Identity and Access Operations](./docs/development/identity-operations.md).
+
 ## Destructive reset
 
 Ordinary shutdowns preserve the explicitly named PostgreSQL, Garage, and Mailpit volumes. The following command permanently deletes all local application and Keycloak databases, uploaded Garage objects and metadata, and captured Mailpit messages:
@@ -188,7 +192,7 @@ This reset is irreversible unless the data was backed up. It affects only the na
 - **Docker daemon unavailable:** start Docker and confirm the active context with `docker context show`. On Linux, confirm the current user can access the Docker socket.
 - **Containers remain unhealthy:** run `make infra-logs`, then inspect the specific service. PostgreSQL must be healthy before Keycloak or the backend can start.
 - **Credentials changed but login still fails:** initialization variables only apply to a new PostgreSQL volume. Either restore the original local values or perform the clearly destructive reset above.
-- **Keycloak settings appear stale:** run `make keycloak-config-check` and then `make keycloak-reconcile`. Client secrets and exact redirect origins come from the active environment file.
+- **Keycloak settings appear stale:** run `make keycloak-config-check`, `make keycloak-reconcile`, and `make keycloak-drift-check`. Client secrets and exact redirect origins come from the active environment file.
 - **Frontend API unavailable:** confirm the backend readiness endpoint is `UP`; both Vite and nginx proxy `/api` to port `8080`.
 - **Testcontainers cannot reach Docker:** confirm `/var/run/docker.sock` is accessible and no stale `DOCKER_HOST` points to another daemon.
 - **Generated API drift:** start the current backend, run `pnpm api:generate`, inspect the contract change, and commit the contract and client together.

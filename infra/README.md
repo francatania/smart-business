@@ -61,12 +61,15 @@ Run the static and live checks separately when working on identity infrastructur
 ```bash
 make keycloak-config-check
 make keycloak-integration-test
+make keycloak-drift-check
 ```
 
 The integration test uses its own Compose project, PostgreSQL volume, network,
 ports, and test environment. It reconciles twice, provisions test-only users,
-restarts Keycloak, verifies the users remain, and removes the isolated resources.
-The test-user service refuses every configuration profile except `test`.
+restarts Keycloak, verifies privacy-safe event metrics, restores the Keycloak
+database from a temporary dump, verifies users before reconciliation, and
+removes the isolated resources. The test-user service refuses every
+configuration profile except `test`.
 
 ## Environment promotion
 
@@ -95,3 +98,7 @@ make infra-reset CONFIRM=delete-smart-business-local-data
 ```
 
 This operation cannot recover the removed local databases, objects, realm state, or captured messages.
+
+Production backup/restore expectations and the intentionally manual recovery
+sequence are documented in
+[Identity and Access Operations](../docs/development/identity-operations.md).

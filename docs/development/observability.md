@@ -23,6 +23,21 @@ Docker Compose publishes the management port only on loopback. Deployed infrastr
 
 Initial alerts should focus on sustained readiness failure, elevated HTTP 5xx rate, request latency, JVM memory pressure, and exhausted database connections. Alert thresholds depend on real traffic and are not fixed in this repository.
 
+### Identity signals
+
+Keycloak exposes health and metrics on its private management port `9000`.
+Smart Business enables aggregate user-event metrics for authentication,
+identity-provider, credential, and session lifecycle events. Their dimensions
+are limited to realm, client, provider, event, and safe error code; usernames,
+subjects, emails, tokens, and session IDs are excluded. Selected user error
+events are retained for 48 hours, administrative request representations are
+disabled, and the event logging listener remains off.
+
+The provider-neutral signal and response catalogue is maintained in
+[Identity and Access Operations](./identity-operations.md). Management traffic
+must remain on the authorized monitoring network rather than the public
+Keycloak hostname.
+
 ## Audit events
 
 Business and security audit events are domain records, not ordinary debug logs. Later modules use these conventions:

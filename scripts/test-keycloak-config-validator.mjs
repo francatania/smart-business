@@ -51,6 +51,14 @@ expectFailure('test identity in deployed configuration', () =>
   ),
 );
 
+expectFailure('partial Google credentials', () =>
+  validateEnvironment(
+    { ...environments.local, GOOGLE_OAUTH_CLIENT_ID: 'local-google-client' },
+    'local',
+    'Unsafe fixture',
+  ),
+);
+
 const unsafeCanonicalConfiguration = {
   realm: {
     name: 'smart-business',
@@ -106,6 +114,43 @@ const unsafeCanonicalConfiguration = {
     userVerificationRequirement: 'required',
     avoidSameAuthenticatorRegistration: true,
   },
+  securityEvents: {
+    eventsEnabled: true,
+    eventsExpirationSeconds: 172800,
+    enabledEventTypes: [
+      'CLIENT_LOGIN_ERROR',
+      'CODE_TO_TOKEN_ERROR',
+      'EXECUTE_ACTIONS_ERROR',
+      'FEDERATED_IDENTITY_LINK_ERROR',
+      'IDENTITY_PROVIDER_FIRST_LOGIN_ERROR',
+      'IDENTITY_PROVIDER_POST_LOGIN_ERROR',
+      'LOGIN_ERROR',
+      'LOGOUT_ERROR',
+      'REMOVE_CREDENTIAL_ERROR',
+      'REMOVE_FEDERATED_IDENTITY_ERROR',
+      'UPDATE_CREDENTIAL_ERROR',
+    ],
+    eventListeners: [],
+    adminEventsEnabled: true,
+    adminEventsDetailsEnabled: false,
+  },
+  eventMetrics: {
+    enabled: true,
+    events: [
+      'code_to_token',
+      'identity_provider_first_login',
+      'identity_provider_login',
+      'identity_provider_post_login',
+      'identity_provider_response',
+      'login',
+      'logout',
+      'refresh_token',
+      'remove_credential',
+      'update_credential',
+      'user_session_deleted',
+    ],
+    tags: ['realm', 'clientId', 'idp'],
+  },
 };
 expectFailure('direct-access grant', () =>
   validateCanonicalConfiguration(unsafeCanonicalConfiguration),
@@ -135,6 +180,26 @@ expectFailure('passkey discoverable credentials weakened', () =>
   validateCanonicalConfiguration({
     ...unsafeCanonicalConfiguration,
     passkeys: { ...unsafeCanonicalConfiguration.passkeys, residentKey: 'preferred' },
+  }),
+);
+
+expectFailure('security events logged with personal data', () =>
+  validateCanonicalConfiguration({
+    ...unsafeCanonicalConfiguration,
+    securityEvents: {
+      ...unsafeCanonicalConfiguration.securityEvents,
+      eventListeners: ['jboss-logging'],
+    },
+  }),
+);
+
+expectFailure('identity metric cardinality expanded', () =>
+  validateCanonicalConfiguration({
+    ...unsafeCanonicalConfiguration,
+    eventMetrics: {
+      ...unsafeCanonicalConfiguration.eventMetrics,
+      tags: [...unsafeCanonicalConfiguration.eventMetrics.tags, 'userId'],
+    },
   }),
 );
 

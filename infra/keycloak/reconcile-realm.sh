@@ -348,6 +348,17 @@ reconcile_passkeys() {
   "$kcadm" update "realms/$realm" -s "browserFlow=$passkey_browser_flow" >/dev/null
 }
 
+reconcile_security_events() {
+  "$kcadm" update events/config -r "$realm" \
+    -s eventsEnabled=true \
+    -s eventsExpiration=172800 \
+    -s 'enabledEventTypes=["CLIENT_LOGIN_ERROR","CODE_TO_TOKEN_ERROR","EXECUTE_ACTIONS_ERROR","FEDERATED_IDENTITY_LINK_ERROR","IDENTITY_PROVIDER_FIRST_LOGIN_ERROR","IDENTITY_PROVIDER_POST_LOGIN_ERROR","LOGIN_ERROR","LOGOUT_ERROR","REMOVE_CREDENTIAL_ERROR","REMOVE_FEDERATED_IDENTITY_ERROR","UPDATE_CREDENTIAL_ERROR"]' \
+    -s 'eventsListeners=[]' \
+    -s adminEventsEnabled=true \
+    -s adminEventsDetailsEnabled=false \
+    >/dev/null
+}
+
 authenticate
 
 if ! "$kcadm" get "realms/$realm" >/dev/null 2>&1; then
@@ -385,5 +396,6 @@ include_realm_roles_in_id_tokens
 
 reconcile_google_identity_provider
 reconcile_passkeys
+reconcile_security_events
 
 echo "Keycloak realm reconciliation completed for profile $KEYCLOAK_CONFIGURATION_PROFILE."

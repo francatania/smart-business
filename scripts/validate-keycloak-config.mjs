@@ -121,6 +121,60 @@ export function validateCanonicalConfiguration(candidate = configuration) {
     passkeys.avoidSameAuthenticatorRegistration === true,
     'Passkeys must reject duplicate authenticator registration.',
   );
+
+  const securityEvents = candidate.securityEvents;
+  invariant(securityEvents.eventsEnabled === true, 'Security event storage must be enabled.');
+  invariant(
+    securityEvents.eventsExpirationSeconds === 172800,
+    'Security events must expire after 48 hours.',
+  );
+  exactKeys(
+    securityEvents.enabledEventTypes,
+    [
+      'CLIENT_LOGIN_ERROR',
+      'CODE_TO_TOKEN_ERROR',
+      'EXECUTE_ACTIONS_ERROR',
+      'FEDERATED_IDENTITY_LINK_ERROR',
+      'IDENTITY_PROVIDER_FIRST_LOGIN_ERROR',
+      'IDENTITY_PROVIDER_POST_LOGIN_ERROR',
+      'LOGIN_ERROR',
+      'LOGOUT_ERROR',
+      'REMOVE_CREDENTIAL_ERROR',
+      'REMOVE_FEDERATED_IDENTITY_ERROR',
+      'UPDATE_CREDENTIAL_ERROR',
+    ],
+    'Stored Keycloak security event types',
+  );
+  exactKeys(securityEvents.eventListeners, [], 'Keycloak event listeners');
+  invariant(
+    securityEvents.adminEventsEnabled === true,
+    'Keycloak administrative event storage must be enabled.',
+  );
+  invariant(
+    securityEvents.adminEventsDetailsEnabled === false,
+    'Keycloak administrative event payloads must not be stored.',
+  );
+
+  const eventMetrics = candidate.eventMetrics;
+  invariant(eventMetrics.enabled === true, 'Keycloak user event metrics must be enabled.');
+  exactKeys(
+    eventMetrics.events,
+    [
+      'code_to_token',
+      'identity_provider_first_login',
+      'identity_provider_login',
+      'identity_provider_post_login',
+      'identity_provider_response',
+      'login',
+      'logout',
+      'refresh_token',
+      'remove_credential',
+      'update_credential',
+      'user_session_deleted',
+    ],
+    'Keycloak user event metrics',
+  );
+  exactKeys(eventMetrics.tags, ['realm', 'clientId', 'idp'], 'Keycloak event metric tags');
 }
 
 const unsafeValue = /(\$\{|\{\{|<[^>]+>|\*|\b(?:CHANGE_ME|REPLACE_ME|TODO)\b)/iu;
@@ -247,6 +301,12 @@ export function validateEnvironment(values, expectedProfile, label) {
   invariant(
     new URL(values.PORTAL_BFF_ORIGIN).origin !== new URL(values.ADMIN_BFF_ORIGIN).origin,
     `${label} Portal and Admin origins must be isolated.`,
+  );
+
+  invariant(
+    Boolean(values.GOOGLE_OAUTH_CLIENT_ID?.trim()) ===
+      Boolean(values.GOOGLE_OAUTH_CLIENT_SECRET?.trim()),
+    `${label} must configure both Google OAuth values or neither.`,
   );
 
   const testVariables = Object.keys(values).filter((name) => name.startsWith('KEYCLOAK_TEST_'));
