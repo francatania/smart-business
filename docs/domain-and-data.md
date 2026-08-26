@@ -18,16 +18,23 @@ Core model names must not depend on the barbershop vertical.
 | Product         | Styling product     | Polish, gel         |
 
 Vertical-specific fields can extend the generic service record without changing its core identity.
+The MVP presents only the `BARBERSHOP` template; additional labels remain future presentation work.
 
 ## Core Entities
 
 ### Organization
 
-The paying tenant and primary data boundary. An organization may have one or more locations.
+The paying tenant and primary data boundary. An organization starts `pending`, becomes `active`
+when its first owner accepts an invitation, and may be `disabled` only by a `platform_admin`.
+Organizations are not hard-deleted in the MVP. An active organization always has at least one
+active owner.
 
 ### Location
 
-A physical or virtual place where services are delivered. Availability and professionals may be associated with one or more locations.
+A physical or virtual place where services are delivered. A location is `active` or `inactive` and
+is not hard-deleted in the MVP. An inactive location accepts neither new public bookings nor new
+professional assignments. An active organization may have no locations while it is configured;
+public booking requires at least one active location.
 
 ### User
 
@@ -41,6 +48,9 @@ they are not identifiers and are never used to merge users.
 ### Organization membership
 
 Associates a user with an organization as an owner, administrator, receptionist, or professional.
+A membership may hold multiple roles and its effective capabilities are their union. A staff
+invitation checks the accepting user's verified email, then persists the stable platform-user
+relationship; email, name, and phone are never identity keys.
 
 ### Customer relationship
 
@@ -147,22 +157,22 @@ Each media asset should record at least:
 
 Marketing permission must not be inferred from permission to store a photo or process it with AI.
 
-## Initial Role Capabilities
+## Organization Foundation Capabilities
 
-| Capability                       | Owner        | Administrator | Receptionist  | Professional               | Customer             |
-| -------------------------------- | ------------ | ------------- | ------------- | -------------------------- | -------------------- |
-| Manage organization settings     | Yes          | Configurable  | No            | No                         | No                   |
-| Manage staff and roles           | Yes          | Configurable  | No            | No                         | No                   |
-| Manage services and availability | Yes          | Yes           | Configurable  | Own availability only      | No                   |
-| Manage appointments              | Yes          | Yes           | Yes           | Assigned appointments      | Own appointments     |
-| View customer records            | Yes          | Yes           | Configurable  | Authorized service context | Shared content only  |
-| Create service records           | Yes          | Yes           | No by default | Yes                        | No                   |
-| Capture service photos           | Yes          | Yes           | No by default | Yes                        | Customer upload only |
-| Run AI-assisted previews         | Configurable | Configurable  | Configurable  | Yes                        | When enabled         |
-| View internal notes              | Yes          | Yes           | No by default | Authorized records         | No                   |
-| View metrics                     | Yes          | Yes           | Configurable  | Own metrics if enabled     | No                   |
+Unlisted capabilities are denied until their owning epic defines them.
 
-Exact permissions should be policy-driven rather than permanently hard-coded to role names.
+| Capability                                           | Owner | Administrator | Receptionist | Professional               |
+| ---------------------------------------------------- | ----- | ------------- | ------------ | -------------------------- |
+| View organization and active locations               | Yes   | Yes           | Yes          | Assigned locations only    |
+| Edit organization profile and locations              | Yes   | Yes           | No           | No                         |
+| Invite or revoke staff                               | Yes   | Yes           | No           | No                         |
+| Grant or revoke non-owner roles                      | Yes   | Yes           | No           | No                         |
+| Grant or revoke owner                                | Yes   | No            | No           | No                         |
+| Assign professionals to locations                    | Yes   | Yes           | No           | No                         |
+| Create, reschedule, reassign, or cancel appointments | Yes   | Yes           | Yes          | Assigned appointments only |
+
+Appointment operations are implemented by Scheduling. Receptionists receive only the booking
+context needed for those operations, not organization-private records.
 
 ## Decisions
 

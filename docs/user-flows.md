@@ -7,7 +7,7 @@
 The business publishes a link in Instagram or another channel. The link opens its public booking page, for example:
 
 ```text
-https://app.example.com/business-slug
+https://app.example.com/book/business-slug
 ```
 
 ### Flow
