@@ -9,7 +9,7 @@ COPY frontend/apps/admin ./frontend/apps/admin
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @smart-business/admin build
 
-FROM nginx:1.29.4-alpine
+FROM nginx:1.31.8-alpine
 COPY frontend/apps/admin/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /workspace/frontend/apps/admin/dist /usr/share/nginx/html
 EXPOSE 80
